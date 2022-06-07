@@ -22,15 +22,54 @@ func (f AccountFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 	return f(ctx, mv)
 }
 
-// The OAuthFunc type is an adapter to allow the use of ordinary
-// function as OAuth mutator.
-type OAuthFunc func(context.Context, *ent.OAuthMutation) (ent.Value, error)
+// The ApplicationFunc type is an adapter to allow the use of ordinary
+// function as Application mutator.
+type ApplicationFunc func(context.Context, *ent.ApplicationMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f OAuthFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.OAuthMutation)
+func (f ApplicationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.ApplicationMutation)
 	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OAuthMutation", m)
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ApplicationMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The RoleFunc type is an adapter to allow the use of ordinary
+// function as Role mutator.
+type RoleFunc func(context.Context, *ent.RoleMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RoleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.RoleMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RoleMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The RoleFuncFunc type is an adapter to allow the use of ordinary
+// function as RoleFunc mutator.
+type RoleFuncFunc func(context.Context, *ent.RoleFuncMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RoleFuncFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.RoleFuncMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RoleFuncMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The SubAccountFunc type is an adapter to allow the use of ordinary
+// function as SubAccount mutator.
+type SubAccountFunc func(context.Context, *ent.SubAccountMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SubAccountFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.SubAccountMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SubAccountMutation", m)
 	}
 	return f(ctx, mv)
 }

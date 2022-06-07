@@ -6,13 +6,14 @@ import (
 	"entgo.io/ent/schema/mixin"
 )
 
-type WhoMixin struct {
+type CommonFields struct {
 	mixin.Schema
 }
 
-func (WhoMixin) Fields() []ent.Field {
+func (CommonFields) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("create_by").Immutable(),
 		field.String("update_by"),
+		field.Bool("deleted").Default(false),
 	}
 }

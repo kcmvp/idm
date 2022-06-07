@@ -15,25 +15,27 @@ type Account struct {
 // Fields of the Account.
 func (Account) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("app_id"),
+		field.String("email"),
+		field.Bool("email_confirmed").Default(false),
 		field.String("mobile"),
 		field.String("first_name"),
 		field.String("last_name"),
 		field.String("passwd"),
-		field.Bool("disabled"),
+		field.Bool("disabled").Default(false),
+		field.String("source"),
 	}
 }
 
 func (Account) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		mixin.Time{},
-		WhoMixin{},
+		CommonFields{},
 	}
 }
 
 // Edges of the Account.
 func (Account) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("oauth", OAuth.Type),
+		edge.To("subAccounts", SubAccount.Type),
 	}
 }

@@ -6,8 +6,11 @@ import (
 	"time"
 
 	"github.com/kcmvp/iam.go/ent/account"
-	"github.com/kcmvp/iam.go/ent/oauth"
+	"github.com/kcmvp/iam.go/ent/application"
+	"github.com/kcmvp/iam.go/ent/role"
+	"github.com/kcmvp/iam.go/ent/rolefunc"
 	"github.com/kcmvp/iam.go/ent/schema"
+	"github.com/kcmvp/iam.go/ent/subaccount"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -17,6 +20,8 @@ func init() {
 	accountMixin := schema.Account{}.Mixin()
 	accountMixinFields0 := accountMixin[0].Fields()
 	_ = accountMixinFields0
+	accountMixinFields1 := accountMixin[1].Fields()
+	_ = accountMixinFields1
 	accountFields := schema.Account{}.Fields()
 	_ = accountFields
 	// accountDescCreateTime is the schema descriptor for create_time field.
@@ -29,19 +34,112 @@ func init() {
 	account.DefaultUpdateTime = accountDescUpdateTime.Default.(func() time.Time)
 	// account.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
 	account.UpdateDefaultUpdateTime = accountDescUpdateTime.UpdateDefault.(func() time.Time)
-	oauthMixin := schema.OAuth{}.Mixin()
-	oauthMixinFields0 := oauthMixin[0].Fields()
-	_ = oauthMixinFields0
-	oauthFields := schema.OAuth{}.Fields()
-	_ = oauthFields
-	// oauthDescCreateTime is the schema descriptor for create_time field.
-	oauthDescCreateTime := oauthMixinFields0[0].Descriptor()
-	// oauth.DefaultCreateTime holds the default value on creation for the create_time field.
-	oauth.DefaultCreateTime = oauthDescCreateTime.Default.(func() time.Time)
-	// oauthDescUpdateTime is the schema descriptor for update_time field.
-	oauthDescUpdateTime := oauthMixinFields0[1].Descriptor()
-	// oauth.DefaultUpdateTime holds the default value on creation for the update_time field.
-	oauth.DefaultUpdateTime = oauthDescUpdateTime.Default.(func() time.Time)
-	// oauth.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
-	oauth.UpdateDefaultUpdateTime = oauthDescUpdateTime.UpdateDefault.(func() time.Time)
+	// accountDescDeleted is the schema descriptor for deleted field.
+	accountDescDeleted := accountMixinFields1[2].Descriptor()
+	// account.DefaultDeleted holds the default value on creation for the deleted field.
+	account.DefaultDeleted = accountDescDeleted.Default.(bool)
+	// accountDescEmailConfirmed is the schema descriptor for email_confirmed field.
+	accountDescEmailConfirmed := accountFields[1].Descriptor()
+	// account.DefaultEmailConfirmed holds the default value on creation for the email_confirmed field.
+	account.DefaultEmailConfirmed = accountDescEmailConfirmed.Default.(bool)
+	// accountDescDisabled is the schema descriptor for disabled field.
+	accountDescDisabled := accountFields[6].Descriptor()
+	// account.DefaultDisabled holds the default value on creation for the disabled field.
+	account.DefaultDisabled = accountDescDisabled.Default.(bool)
+	applicationMixin := schema.Application{}.Mixin()
+	applicationMixinFields0 := applicationMixin[0].Fields()
+	_ = applicationMixinFields0
+	applicationMixinFields1 := applicationMixin[1].Fields()
+	_ = applicationMixinFields1
+	applicationFields := schema.Application{}.Fields()
+	_ = applicationFields
+	// applicationDescCreateTime is the schema descriptor for create_time field.
+	applicationDescCreateTime := applicationMixinFields0[0].Descriptor()
+	// application.DefaultCreateTime holds the default value on creation for the create_time field.
+	application.DefaultCreateTime = applicationDescCreateTime.Default.(func() time.Time)
+	// applicationDescUpdateTime is the schema descriptor for update_time field.
+	applicationDescUpdateTime := applicationMixinFields0[1].Descriptor()
+	// application.DefaultUpdateTime holds the default value on creation for the update_time field.
+	application.DefaultUpdateTime = applicationDescUpdateTime.Default.(func() time.Time)
+	// application.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	application.UpdateDefaultUpdateTime = applicationDescUpdateTime.UpdateDefault.(func() time.Time)
+	// applicationDescDeleted is the schema descriptor for deleted field.
+	applicationDescDeleted := applicationMixinFields1[2].Descriptor()
+	// application.DefaultDeleted holds the default value on creation for the deleted field.
+	application.DefaultDeleted = applicationDescDeleted.Default.(bool)
+	// applicationDescAppName is the schema descriptor for app_name field.
+	applicationDescAppName := applicationFields[0].Descriptor()
+	// application.AppNameValidator is a validator for the "app_name" field. It is called by the builders before save.
+	application.AppNameValidator = applicationDescAppName.Validators[0].(func(string) error)
+	// applicationDescURL is the schema descriptor for url field.
+	applicationDescURL := applicationFields[1].Descriptor()
+	// application.URLValidator is a validator for the "url" field. It is called by the builders before save.
+	application.URLValidator = applicationDescURL.Validators[0].(func(string) error)
+	roleMixin := schema.Role{}.Mixin()
+	roleMixinFields0 := roleMixin[0].Fields()
+	_ = roleMixinFields0
+	roleMixinFields1 := roleMixin[1].Fields()
+	_ = roleMixinFields1
+	roleFields := schema.Role{}.Fields()
+	_ = roleFields
+	// roleDescCreateTime is the schema descriptor for create_time field.
+	roleDescCreateTime := roleMixinFields0[0].Descriptor()
+	// role.DefaultCreateTime holds the default value on creation for the create_time field.
+	role.DefaultCreateTime = roleDescCreateTime.Default.(func() time.Time)
+	// roleDescUpdateTime is the schema descriptor for update_time field.
+	roleDescUpdateTime := roleMixinFields0[1].Descriptor()
+	// role.DefaultUpdateTime holds the default value on creation for the update_time field.
+	role.DefaultUpdateTime = roleDescUpdateTime.Default.(func() time.Time)
+	// role.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	role.UpdateDefaultUpdateTime = roleDescUpdateTime.UpdateDefault.(func() time.Time)
+	// roleDescDeleted is the schema descriptor for deleted field.
+	roleDescDeleted := roleMixinFields1[2].Descriptor()
+	// role.DefaultDeleted holds the default value on creation for the deleted field.
+	role.DefaultDeleted = roleDescDeleted.Default.(bool)
+	rolefuncMixin := schema.RoleFunc{}.Mixin()
+	rolefuncMixinFields0 := rolefuncMixin[0].Fields()
+	_ = rolefuncMixinFields0
+	rolefuncMixinFields1 := rolefuncMixin[1].Fields()
+	_ = rolefuncMixinFields1
+	rolefuncFields := schema.RoleFunc{}.Fields()
+	_ = rolefuncFields
+	// rolefuncDescCreateTime is the schema descriptor for create_time field.
+	rolefuncDescCreateTime := rolefuncMixinFields0[0].Descriptor()
+	// rolefunc.DefaultCreateTime holds the default value on creation for the create_time field.
+	rolefunc.DefaultCreateTime = rolefuncDescCreateTime.Default.(func() time.Time)
+	// rolefuncDescUpdateTime is the schema descriptor for update_time field.
+	rolefuncDescUpdateTime := rolefuncMixinFields0[1].Descriptor()
+	// rolefunc.DefaultUpdateTime holds the default value on creation for the update_time field.
+	rolefunc.DefaultUpdateTime = rolefuncDescUpdateTime.Default.(func() time.Time)
+	// rolefunc.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	rolefunc.UpdateDefaultUpdateTime = rolefuncDescUpdateTime.UpdateDefault.(func() time.Time)
+	// rolefuncDescDeleted is the schema descriptor for deleted field.
+	rolefuncDescDeleted := rolefuncMixinFields1[2].Descriptor()
+	// rolefunc.DefaultDeleted holds the default value on creation for the deleted field.
+	rolefunc.DefaultDeleted = rolefuncDescDeleted.Default.(bool)
+	// rolefuncDescURLPattern is the schema descriptor for url_pattern field.
+	rolefuncDescURLPattern := rolefuncFields[0].Descriptor()
+	// rolefunc.URLPatternValidator is a validator for the "url_pattern" field. It is called by the builders before save.
+	rolefunc.URLPatternValidator = rolefuncDescURLPattern.Validators[0].(func(string) error)
+	subaccountMixin := schema.SubAccount{}.Mixin()
+	subaccountMixinFields0 := subaccountMixin[0].Fields()
+	_ = subaccountMixinFields0
+	subaccountMixinFields1 := subaccountMixin[1].Fields()
+	_ = subaccountMixinFields1
+	subaccountFields := schema.SubAccount{}.Fields()
+	_ = subaccountFields
+	// subaccountDescCreateTime is the schema descriptor for create_time field.
+	subaccountDescCreateTime := subaccountMixinFields0[0].Descriptor()
+	// subaccount.DefaultCreateTime holds the default value on creation for the create_time field.
+	subaccount.DefaultCreateTime = subaccountDescCreateTime.Default.(func() time.Time)
+	// subaccountDescUpdateTime is the schema descriptor for update_time field.
+	subaccountDescUpdateTime := subaccountMixinFields0[1].Descriptor()
+	// subaccount.DefaultUpdateTime holds the default value on creation for the update_time field.
+	subaccount.DefaultUpdateTime = subaccountDescUpdateTime.Default.(func() time.Time)
+	// subaccount.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	subaccount.UpdateDefaultUpdateTime = subaccountDescUpdateTime.UpdateDefault.(func() time.Time)
+	// subaccountDescDeleted is the schema descriptor for deleted field.
+	subaccountDescDeleted := subaccountMixinFields1[2].Descriptor()
+	// subaccount.DefaultDeleted holds the default value on creation for the deleted field.
+	subaccount.DefaultDeleted = subaccountDescDeleted.Default.(bool)
 }

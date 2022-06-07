@@ -11,7 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/kcmvp/iam.go/ent/account"
-	"github.com/kcmvp/iam.go/ent/oauth"
+	"github.com/kcmvp/iam.go/ent/subaccount"
 )
 
 // AccountCreate is the builder for creating a Account entity.
@@ -61,9 +61,37 @@ func (ac *AccountCreate) SetUpdateBy(s string) *AccountCreate {
 	return ac
 }
 
-// SetAppID sets the "app_id" field.
-func (ac *AccountCreate) SetAppID(s string) *AccountCreate {
-	ac.mutation.SetAppID(s)
+// SetDeleted sets the "deleted" field.
+func (ac *AccountCreate) SetDeleted(b bool) *AccountCreate {
+	ac.mutation.SetDeleted(b)
+	return ac
+}
+
+// SetNillableDeleted sets the "deleted" field if the given value is not nil.
+func (ac *AccountCreate) SetNillableDeleted(b *bool) *AccountCreate {
+	if b != nil {
+		ac.SetDeleted(*b)
+	}
+	return ac
+}
+
+// SetEmail sets the "email" field.
+func (ac *AccountCreate) SetEmail(s string) *AccountCreate {
+	ac.mutation.SetEmail(s)
+	return ac
+}
+
+// SetEmailConfirmed sets the "email_confirmed" field.
+func (ac *AccountCreate) SetEmailConfirmed(b bool) *AccountCreate {
+	ac.mutation.SetEmailConfirmed(b)
+	return ac
+}
+
+// SetNillableEmailConfirmed sets the "email_confirmed" field if the given value is not nil.
+func (ac *AccountCreate) SetNillableEmailConfirmed(b *bool) *AccountCreate {
+	if b != nil {
+		ac.SetEmailConfirmed(*b)
+	}
 	return ac
 }
 
@@ -97,19 +125,33 @@ func (ac *AccountCreate) SetDisabled(b bool) *AccountCreate {
 	return ac
 }
 
-// AddOauthIDs adds the "oauth" edge to the OAuth entity by IDs.
-func (ac *AccountCreate) AddOauthIDs(ids ...int) *AccountCreate {
-	ac.mutation.AddOauthIDs(ids...)
+// SetNillableDisabled sets the "disabled" field if the given value is not nil.
+func (ac *AccountCreate) SetNillableDisabled(b *bool) *AccountCreate {
+	if b != nil {
+		ac.SetDisabled(*b)
+	}
 	return ac
 }
 
-// AddOauth adds the "oauth" edges to the OAuth entity.
-func (ac *AccountCreate) AddOauth(o ...*OAuth) *AccountCreate {
-	ids := make([]int, len(o))
-	for i := range o {
-		ids[i] = o[i].ID
+// SetSource sets the "source" field.
+func (ac *AccountCreate) SetSource(s string) *AccountCreate {
+	ac.mutation.SetSource(s)
+	return ac
+}
+
+// AddSubAccountIDs adds the "subAccounts" edge to the SubAccount entity by IDs.
+func (ac *AccountCreate) AddSubAccountIDs(ids ...int) *AccountCreate {
+	ac.mutation.AddSubAccountIDs(ids...)
+	return ac
+}
+
+// AddSubAccounts adds the "subAccounts" edges to the SubAccount entity.
+func (ac *AccountCreate) AddSubAccounts(s ...*SubAccount) *AccountCreate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
 	}
-	return ac.AddOauthIDs(ids...)
+	return ac.AddSubAccountIDs(ids...)
 }
 
 // Mutation returns the AccountMutation object of the builder.
@@ -191,6 +233,18 @@ func (ac *AccountCreate) defaults() {
 		v := account.DefaultUpdateTime()
 		ac.mutation.SetUpdateTime(v)
 	}
+	if _, ok := ac.mutation.Deleted(); !ok {
+		v := account.DefaultDeleted
+		ac.mutation.SetDeleted(v)
+	}
+	if _, ok := ac.mutation.EmailConfirmed(); !ok {
+		v := account.DefaultEmailConfirmed
+		ac.mutation.SetEmailConfirmed(v)
+	}
+	if _, ok := ac.mutation.Disabled(); !ok {
+		v := account.DefaultDisabled
+		ac.mutation.SetDisabled(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -207,8 +261,14 @@ func (ac *AccountCreate) check() error {
 	if _, ok := ac.mutation.UpdateBy(); !ok {
 		return &ValidationError{Name: "update_by", err: errors.New(`ent: missing required field "Account.update_by"`)}
 	}
-	if _, ok := ac.mutation.AppID(); !ok {
-		return &ValidationError{Name: "app_id", err: errors.New(`ent: missing required field "Account.app_id"`)}
+	if _, ok := ac.mutation.Deleted(); !ok {
+		return &ValidationError{Name: "deleted", err: errors.New(`ent: missing required field "Account.deleted"`)}
+	}
+	if _, ok := ac.mutation.Email(); !ok {
+		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "Account.email"`)}
+	}
+	if _, ok := ac.mutation.EmailConfirmed(); !ok {
+		return &ValidationError{Name: "email_confirmed", err: errors.New(`ent: missing required field "Account.email_confirmed"`)}
 	}
 	if _, ok := ac.mutation.Mobile(); !ok {
 		return &ValidationError{Name: "mobile", err: errors.New(`ent: missing required field "Account.mobile"`)}
@@ -224,6 +284,9 @@ func (ac *AccountCreate) check() error {
 	}
 	if _, ok := ac.mutation.Disabled(); !ok {
 		return &ValidationError{Name: "disabled", err: errors.New(`ent: missing required field "Account.disabled"`)}
+	}
+	if _, ok := ac.mutation.Source(); !ok {
+		return &ValidationError{Name: "source", err: errors.New(`ent: missing required field "Account.source"`)}
 	}
 	return nil
 }
@@ -284,13 +347,29 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 		})
 		_node.UpdateBy = value
 	}
-	if value, ok := ac.mutation.AppID(); ok {
+	if value, ok := ac.mutation.Deleted(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: account.FieldDeleted,
+		})
+		_node.Deleted = value
+	}
+	if value, ok := ac.mutation.Email(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: account.FieldAppID,
+			Column: account.FieldEmail,
 		})
-		_node.AppID = value
+		_node.Email = value
+	}
+	if value, ok := ac.mutation.EmailConfirmed(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: account.FieldEmailConfirmed,
+		})
+		_node.EmailConfirmed = value
 	}
 	if value, ok := ac.mutation.Mobile(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -332,17 +411,25 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 		})
 		_node.Disabled = value
 	}
-	if nodes := ac.mutation.OauthIDs(); len(nodes) > 0 {
+	if value, ok := ac.mutation.Source(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: account.FieldSource,
+		})
+		_node.Source = value
+	}
+	if nodes := ac.mutation.SubAccountsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   account.OauthTable,
-			Columns: []string{account.OauthColumn},
+			Table:   account.SubAccountsTable,
+			Columns: account.SubAccountsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: oauth.FieldID,
+					Column: subaccount.FieldID,
 				},
 			},
 		}

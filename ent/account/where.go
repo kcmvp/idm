@@ -121,10 +121,24 @@ func UpdateBy(v string) predicate.Account {
 	})
 }
 
-// AppID applies equality check predicate on the "app_id" field. It's identical to AppIDEQ.
-func AppID(v string) predicate.Account {
+// Deleted applies equality check predicate on the "deleted" field. It's identical to DeletedEQ.
+func Deleted(v bool) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldAppID), v))
+		s.Where(sql.EQ(s.C(FieldDeleted), v))
+	})
+}
+
+// Email applies equality check predicate on the "email" field. It's identical to EmailEQ.
+func Email(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldEmail), v))
+	})
+}
+
+// EmailConfirmed applies equality check predicate on the "email_confirmed" field. It's identical to EmailConfirmedEQ.
+func EmailConfirmed(v bool) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldEmailConfirmed), v))
 	})
 }
 
@@ -160,6 +174,13 @@ func Passwd(v string) predicate.Account {
 func Disabled(v bool) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldDisabled), v))
+	})
+}
+
+// Source applies equality check predicate on the "source" field. It's identical to SourceEQ.
+func Source(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldSource), v))
 	})
 }
 
@@ -537,22 +558,36 @@ func UpdateByContainsFold(v string) predicate.Account {
 	})
 }
 
-// AppIDEQ applies the EQ predicate on the "app_id" field.
-func AppIDEQ(v string) predicate.Account {
+// DeletedEQ applies the EQ predicate on the "deleted" field.
+func DeletedEQ(v bool) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldAppID), v))
+		s.Where(sql.EQ(s.C(FieldDeleted), v))
 	})
 }
 
-// AppIDNEQ applies the NEQ predicate on the "app_id" field.
-func AppIDNEQ(v string) predicate.Account {
+// DeletedNEQ applies the NEQ predicate on the "deleted" field.
+func DeletedNEQ(v bool) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldAppID), v))
+		s.Where(sql.NEQ(s.C(FieldDeleted), v))
 	})
 }
 
-// AppIDIn applies the In predicate on the "app_id" field.
-func AppIDIn(vs ...string) predicate.Account {
+// EmailEQ applies the EQ predicate on the "email" field.
+func EmailEQ(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldEmail), v))
+	})
+}
+
+// EmailNEQ applies the NEQ predicate on the "email" field.
+func EmailNEQ(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldEmail), v))
+	})
+}
+
+// EmailIn applies the In predicate on the "email" field.
+func EmailIn(vs ...string) predicate.Account {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -564,12 +599,12 @@ func AppIDIn(vs ...string) predicate.Account {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.In(s.C(FieldAppID), v...))
+		s.Where(sql.In(s.C(FieldEmail), v...))
 	})
 }
 
-// AppIDNotIn applies the NotIn predicate on the "app_id" field.
-func AppIDNotIn(vs ...string) predicate.Account {
+// EmailNotIn applies the NotIn predicate on the "email" field.
+func EmailNotIn(vs ...string) predicate.Account {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -581,70 +616,84 @@ func AppIDNotIn(vs ...string) predicate.Account {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.NotIn(s.C(FieldAppID), v...))
+		s.Where(sql.NotIn(s.C(FieldEmail), v...))
 	})
 }
 
-// AppIDGT applies the GT predicate on the "app_id" field.
-func AppIDGT(v string) predicate.Account {
+// EmailGT applies the GT predicate on the "email" field.
+func EmailGT(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldAppID), v))
+		s.Where(sql.GT(s.C(FieldEmail), v))
 	})
 }
 
-// AppIDGTE applies the GTE predicate on the "app_id" field.
-func AppIDGTE(v string) predicate.Account {
+// EmailGTE applies the GTE predicate on the "email" field.
+func EmailGTE(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldAppID), v))
+		s.Where(sql.GTE(s.C(FieldEmail), v))
 	})
 }
 
-// AppIDLT applies the LT predicate on the "app_id" field.
-func AppIDLT(v string) predicate.Account {
+// EmailLT applies the LT predicate on the "email" field.
+func EmailLT(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldAppID), v))
+		s.Where(sql.LT(s.C(FieldEmail), v))
 	})
 }
 
-// AppIDLTE applies the LTE predicate on the "app_id" field.
-func AppIDLTE(v string) predicate.Account {
+// EmailLTE applies the LTE predicate on the "email" field.
+func EmailLTE(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldAppID), v))
+		s.Where(sql.LTE(s.C(FieldEmail), v))
 	})
 }
 
-// AppIDContains applies the Contains predicate on the "app_id" field.
-func AppIDContains(v string) predicate.Account {
+// EmailContains applies the Contains predicate on the "email" field.
+func EmailContains(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldAppID), v))
+		s.Where(sql.Contains(s.C(FieldEmail), v))
 	})
 }
 
-// AppIDHasPrefix applies the HasPrefix predicate on the "app_id" field.
-func AppIDHasPrefix(v string) predicate.Account {
+// EmailHasPrefix applies the HasPrefix predicate on the "email" field.
+func EmailHasPrefix(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldAppID), v))
+		s.Where(sql.HasPrefix(s.C(FieldEmail), v))
 	})
 }
 
-// AppIDHasSuffix applies the HasSuffix predicate on the "app_id" field.
-func AppIDHasSuffix(v string) predicate.Account {
+// EmailHasSuffix applies the HasSuffix predicate on the "email" field.
+func EmailHasSuffix(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldAppID), v))
+		s.Where(sql.HasSuffix(s.C(FieldEmail), v))
 	})
 }
 
-// AppIDEqualFold applies the EqualFold predicate on the "app_id" field.
-func AppIDEqualFold(v string) predicate.Account {
+// EmailEqualFold applies the EqualFold predicate on the "email" field.
+func EmailEqualFold(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldAppID), v))
+		s.Where(sql.EqualFold(s.C(FieldEmail), v))
 	})
 }
 
-// AppIDContainsFold applies the ContainsFold predicate on the "app_id" field.
-func AppIDContainsFold(v string) predicate.Account {
+// EmailContainsFold applies the ContainsFold predicate on the "email" field.
+func EmailContainsFold(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldAppID), v))
+		s.Where(sql.ContainsFold(s.C(FieldEmail), v))
+	})
+}
+
+// EmailConfirmedEQ applies the EQ predicate on the "email_confirmed" field.
+func EmailConfirmedEQ(v bool) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldEmailConfirmed), v))
+	})
+}
+
+// EmailConfirmedNEQ applies the NEQ predicate on the "email_confirmed" field.
+func EmailConfirmedNEQ(v bool) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldEmailConfirmed), v))
 	})
 }
 
@@ -1106,25 +1155,136 @@ func DisabledNEQ(v bool) predicate.Account {
 	})
 }
 
-// HasOauth applies the HasEdge predicate on the "oauth" edge.
-func HasOauth() predicate.Account {
+// SourceEQ applies the EQ predicate on the "source" field.
+func SourceEQ(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldSource), v))
+	})
+}
+
+// SourceNEQ applies the NEQ predicate on the "source" field.
+func SourceNEQ(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldSource), v))
+	})
+}
+
+// SourceIn applies the In predicate on the "source" field.
+func SourceIn(vs ...string) predicate.Account {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Account(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldSource), v...))
+	})
+}
+
+// SourceNotIn applies the NotIn predicate on the "source" field.
+func SourceNotIn(vs ...string) predicate.Account {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Account(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldSource), v...))
+	})
+}
+
+// SourceGT applies the GT predicate on the "source" field.
+func SourceGT(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldSource), v))
+	})
+}
+
+// SourceGTE applies the GTE predicate on the "source" field.
+func SourceGTE(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldSource), v))
+	})
+}
+
+// SourceLT applies the LT predicate on the "source" field.
+func SourceLT(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldSource), v))
+	})
+}
+
+// SourceLTE applies the LTE predicate on the "source" field.
+func SourceLTE(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldSource), v))
+	})
+}
+
+// SourceContains applies the Contains predicate on the "source" field.
+func SourceContains(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldSource), v))
+	})
+}
+
+// SourceHasPrefix applies the HasPrefix predicate on the "source" field.
+func SourceHasPrefix(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldSource), v))
+	})
+}
+
+// SourceHasSuffix applies the HasSuffix predicate on the "source" field.
+func SourceHasSuffix(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldSource), v))
+	})
+}
+
+// SourceEqualFold applies the EqualFold predicate on the "source" field.
+func SourceEqualFold(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldSource), v))
+	})
+}
+
+// SourceContainsFold applies the ContainsFold predicate on the "source" field.
+func SourceContainsFold(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldSource), v))
+	})
+}
+
+// HasSubAccounts applies the HasEdge predicate on the "subAccounts" edge.
+func HasSubAccounts() predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(OauthTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, OauthTable, OauthColumn),
+			sqlgraph.To(SubAccountsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, SubAccountsTable, SubAccountsPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasOauthWith applies the HasEdge predicate on the "oauth" edge with a given conditions (other predicates).
-func HasOauthWith(preds ...predicate.OAuth) predicate.Account {
+// HasSubAccountsWith applies the HasEdge predicate on the "subAccounts" edge with a given conditions (other predicates).
+func HasSubAccountsWith(preds ...predicate.SubAccount) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(OauthInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, OauthTable, OauthColumn),
+			sqlgraph.To(SubAccountsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, SubAccountsTable, SubAccountsPrimaryKey...),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

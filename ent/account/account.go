@@ -19,8 +19,12 @@ const (
 	FieldCreateBy = "create_by"
 	// FieldUpdateBy holds the string denoting the update_by field in the database.
 	FieldUpdateBy = "update_by"
-	// FieldAppID holds the string denoting the app_id field in the database.
-	FieldAppID = "app_id"
+	// FieldDeleted holds the string denoting the deleted field in the database.
+	FieldDeleted = "deleted"
+	// FieldEmail holds the string denoting the email field in the database.
+	FieldEmail = "email"
+	// FieldEmailConfirmed holds the string denoting the email_confirmed field in the database.
+	FieldEmailConfirmed = "email_confirmed"
 	// FieldMobile holds the string denoting the mobile field in the database.
 	FieldMobile = "mobile"
 	// FieldFirstName holds the string denoting the first_name field in the database.
@@ -31,17 +35,17 @@ const (
 	FieldPasswd = "passwd"
 	// FieldDisabled holds the string denoting the disabled field in the database.
 	FieldDisabled = "disabled"
-	// EdgeOauth holds the string denoting the oauth edge name in mutations.
-	EdgeOauth = "oauth"
+	// FieldSource holds the string denoting the source field in the database.
+	FieldSource = "source"
+	// EdgeSubAccounts holds the string denoting the subaccounts edge name in mutations.
+	EdgeSubAccounts = "subAccounts"
 	// Table holds the table name of the account in the database.
 	Table = "accounts"
-	// OauthTable is the table that holds the oauth relation/edge.
-	OauthTable = "oauths"
-	// OauthInverseTable is the table name for the OAuth entity.
-	// It exists in this package in order to avoid circular dependency with the "oauth" package.
-	OauthInverseTable = "oauths"
-	// OauthColumn is the table column denoting the oauth relation/edge.
-	OauthColumn = "account_oauth"
+	// SubAccountsTable is the table that holds the subAccounts relation/edge. The primary key declared below.
+	SubAccountsTable = "account_subAccounts"
+	// SubAccountsInverseTable is the table name for the SubAccount entity.
+	// It exists in this package in order to avoid circular dependency with the "subaccount" package.
+	SubAccountsInverseTable = "sub_accounts"
 )
 
 // Columns holds all SQL columns for account fields.
@@ -51,13 +55,22 @@ var Columns = []string{
 	FieldUpdateTime,
 	FieldCreateBy,
 	FieldUpdateBy,
-	FieldAppID,
+	FieldDeleted,
+	FieldEmail,
+	FieldEmailConfirmed,
 	FieldMobile,
 	FieldFirstName,
 	FieldLastName,
 	FieldPasswd,
 	FieldDisabled,
+	FieldSource,
 }
+
+var (
+	// SubAccountsPrimaryKey and SubAccountsColumn2 are the table columns denoting the
+	// primary key for the subAccounts relation (M2M).
+	SubAccountsPrimaryKey = []string{"account_id", "sub_account_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -76,4 +89,10 @@ var (
 	DefaultUpdateTime func() time.Time
 	// UpdateDefaultUpdateTime holds the default value on update for the "update_time" field.
 	UpdateDefaultUpdateTime func() time.Time
+	// DefaultDeleted holds the default value on creation for the "deleted" field.
+	DefaultDeleted bool
+	// DefaultEmailConfirmed holds the default value on creation for the "email_confirmed" field.
+	DefaultEmailConfirmed bool
+	// DefaultDisabled holds the default value on creation for the "disabled" field.
+	DefaultDisabled bool
 )

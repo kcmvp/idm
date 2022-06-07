@@ -15,12 +15,15 @@ var (
 		{Name: "update_time", Type: field.TypeTime},
 		{Name: "create_by", Type: field.TypeString},
 		{Name: "update_by", Type: field.TypeString},
-		{Name: "app_id", Type: field.TypeString},
+		{Name: "deleted", Type: field.TypeBool, Default: false},
+		{Name: "email", Type: field.TypeString},
+		{Name: "email_confirmed", Type: field.TypeBool, Default: false},
 		{Name: "mobile", Type: field.TypeString},
 		{Name: "first_name", Type: field.TypeString},
 		{Name: "last_name", Type: field.TypeString},
 		{Name: "passwd", Type: field.TypeString},
-		{Name: "disabled", Type: field.TypeBool},
+		{Name: "disabled", Type: field.TypeBool, Default: false},
+		{Name: "source", Type: field.TypeString},
 	}
 	// AccountsTable holds the schema information for the "accounts" table.
 	AccountsTable = &schema.Table{
@@ -28,38 +31,166 @@ var (
 		Columns:    AccountsColumns,
 		PrimaryKey: []*schema.Column{AccountsColumns[0]},
 	}
-	// OauthsColumns holds the columns for the "oauths" table.
-	OauthsColumns = []*schema.Column{
+	// ApplicationsColumns holds the columns for the "applications" table.
+	ApplicationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "create_time", Type: field.TypeTime},
 		{Name: "update_time", Type: field.TypeTime},
 		{Name: "create_by", Type: field.TypeString},
 		{Name: "update_by", Type: field.TypeString},
-		{Name: "oauth_type", Type: field.TypeInt},
-		{Name: "open_id", Type: field.TypeString},
-		{Name: "account_oauth", Type: field.TypeInt, Nullable: true},
+		{Name: "deleted", Type: field.TypeBool, Default: false},
+		{Name: "app_name", Type: field.TypeString, Unique: true},
+		{Name: "url", Type: field.TypeString},
 	}
-	// OauthsTable holds the schema information for the "oauths" table.
-	OauthsTable = &schema.Table{
-		Name:       "oauths",
-		Columns:    OauthsColumns,
-		PrimaryKey: []*schema.Column{OauthsColumns[0]},
+	// ApplicationsTable holds the schema information for the "applications" table.
+	ApplicationsTable = &schema.Table{
+		Name:       "applications",
+		Columns:    ApplicationsColumns,
+		PrimaryKey: []*schema.Column{ApplicationsColumns[0]},
+	}
+	// RolesColumns holds the columns for the "roles" table.
+	RolesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "create_by", Type: field.TypeString},
+		{Name: "update_by", Type: field.TypeString},
+		{Name: "deleted", Type: field.TypeBool, Default: false},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "desc", Type: field.TypeString},
+	}
+	// RolesTable holds the schema information for the "roles" table.
+	RolesTable = &schema.Table{
+		Name:       "roles",
+		Columns:    RolesColumns,
+		PrimaryKey: []*schema.Column{RolesColumns[0]},
+	}
+	// RoleFuncsColumns holds the columns for the "role_funcs" table.
+	RoleFuncsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "create_by", Type: field.TypeString},
+		{Name: "update_by", Type: field.TypeString},
+		{Name: "deleted", Type: field.TypeBool, Default: false},
+		{Name: "url_pattern", Type: field.TypeString},
+	}
+	// RoleFuncsTable holds the schema information for the "role_funcs" table.
+	RoleFuncsTable = &schema.Table{
+		Name:       "role_funcs",
+		Columns:    RoleFuncsColumns,
+		PrimaryKey: []*schema.Column{RoleFuncsColumns[0]},
+	}
+	// SubAccountsColumns holds the columns for the "sub_accounts" table.
+	SubAccountsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "create_by", Type: field.TypeString},
+		{Name: "update_by", Type: field.TypeString},
+		{Name: "deleted", Type: field.TypeBool, Default: false},
+		{Name: "acct_type", Type: field.TypeInt},
+		{Name: "sub_acct", Type: field.TypeString},
+	}
+	// SubAccountsTable holds the schema information for the "sub_accounts" table.
+	SubAccountsTable = &schema.Table{
+		Name:       "sub_accounts",
+		Columns:    SubAccountsColumns,
+		PrimaryKey: []*schema.Column{SubAccountsColumns[0]},
+	}
+	// AccountSubAccountsColumns holds the columns for the "account_subAccounts" table.
+	AccountSubAccountsColumns = []*schema.Column{
+		{Name: "account_id", Type: field.TypeInt},
+		{Name: "sub_account_id", Type: field.TypeInt},
+	}
+	// AccountSubAccountsTable holds the schema information for the "account_subAccounts" table.
+	AccountSubAccountsTable = &schema.Table{
+		Name:       "account_subAccounts",
+		Columns:    AccountSubAccountsColumns,
+		PrimaryKey: []*schema.Column{AccountSubAccountsColumns[0], AccountSubAccountsColumns[1]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "oauths_accounts_oauth",
-				Columns:    []*schema.Column{OauthsColumns[7]},
+				Symbol:     "account_subAccounts_account_id",
+				Columns:    []*schema.Column{AccountSubAccountsColumns[0]},
 				RefColumns: []*schema.Column{AccountsColumns[0]},
-				OnDelete:   schema.SetNull,
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "account_subAccounts_sub_account_id",
+				Columns:    []*schema.Column{AccountSubAccountsColumns[1]},
+				RefColumns: []*schema.Column{SubAccountsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
+	// ApplicationRolesColumns holds the columns for the "application_roles" table.
+	ApplicationRolesColumns = []*schema.Column{
+		{Name: "application_id", Type: field.TypeInt},
+		{Name: "role_id", Type: field.TypeInt},
+	}
+	// ApplicationRolesTable holds the schema information for the "application_roles" table.
+	ApplicationRolesTable = &schema.Table{
+		Name:       "application_roles",
+		Columns:    ApplicationRolesColumns,
+		PrimaryKey: []*schema.Column{ApplicationRolesColumns[0], ApplicationRolesColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "application_roles_application_id",
+				Columns:    []*schema.Column{ApplicationRolesColumns[0]},
+				RefColumns: []*schema.Column{ApplicationsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "application_roles_role_id",
+				Columns:    []*schema.Column{ApplicationRolesColumns[1]},
+				RefColumns: []*schema.Column{RolesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
+	// RoleFuncsColumns holds the columns for the "role_funcs" table.
+	RoleFuncsColumns = []*schema.Column{
+		{Name: "role_id", Type: field.TypeInt},
+		{Name: "role_func_id", Type: field.TypeInt},
+	}
+	// RoleFuncsTable holds the schema information for the "role_funcs" table.
+	RoleFuncsTable = &schema.Table{
+		Name:       "role_funcs",
+		Columns:    RoleFuncsColumns,
+		PrimaryKey: []*schema.Column{RoleFuncsColumns[0], RoleFuncsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "role_funcs_role_id",
+				Columns:    []*schema.Column{RoleFuncsColumns[0]},
+				RefColumns: []*schema.Column{RolesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "role_funcs_role_func_id",
+				Columns:    []*schema.Column{RoleFuncsColumns[1]},
+				RefColumns: []*schema.Column{RoleFuncsColumns[0]},
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AccountsTable,
-		OauthsTable,
+		ApplicationsTable,
+		RolesTable,
+		RoleFuncsTable,
+		SubAccountsTable,
+		AccountSubAccountsTable,
+		ApplicationRolesTable,
+		RoleFuncsTable,
 	}
 )
 
 func init() {
-	OauthsTable.ForeignKeys[0].RefTable = AccountsTable
+	AccountSubAccountsTable.ForeignKeys[0].RefTable = AccountsTable
+	AccountSubAccountsTable.ForeignKeys[1].RefTable = SubAccountsTable
+	ApplicationRolesTable.ForeignKeys[0].RefTable = ApplicationsTable
+	ApplicationRolesTable.ForeignKeys[1].RefTable = RolesTable
+	RoleFuncsTable.ForeignKeys[0].RefTable = RolesTable
+	RoleFuncsTable.ForeignKeys[1].RefTable = RoleFuncsTable
 }

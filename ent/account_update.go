@@ -12,8 +12,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/kcmvp/iam.go/ent/account"
-	"github.com/kcmvp/iam.go/ent/oauth"
 	"github.com/kcmvp/iam.go/ent/predicate"
+	"github.com/kcmvp/iam.go/ent/subaccount"
 )
 
 // AccountUpdate is the builder for updating Account entities.
@@ -41,9 +41,37 @@ func (au *AccountUpdate) SetUpdateBy(s string) *AccountUpdate {
 	return au
 }
 
-// SetAppID sets the "app_id" field.
-func (au *AccountUpdate) SetAppID(s string) *AccountUpdate {
-	au.mutation.SetAppID(s)
+// SetDeleted sets the "deleted" field.
+func (au *AccountUpdate) SetDeleted(b bool) *AccountUpdate {
+	au.mutation.SetDeleted(b)
+	return au
+}
+
+// SetNillableDeleted sets the "deleted" field if the given value is not nil.
+func (au *AccountUpdate) SetNillableDeleted(b *bool) *AccountUpdate {
+	if b != nil {
+		au.SetDeleted(*b)
+	}
+	return au
+}
+
+// SetEmail sets the "email" field.
+func (au *AccountUpdate) SetEmail(s string) *AccountUpdate {
+	au.mutation.SetEmail(s)
+	return au
+}
+
+// SetEmailConfirmed sets the "email_confirmed" field.
+func (au *AccountUpdate) SetEmailConfirmed(b bool) *AccountUpdate {
+	au.mutation.SetEmailConfirmed(b)
+	return au
+}
+
+// SetNillableEmailConfirmed sets the "email_confirmed" field if the given value is not nil.
+func (au *AccountUpdate) SetNillableEmailConfirmed(b *bool) *AccountUpdate {
+	if b != nil {
+		au.SetEmailConfirmed(*b)
+	}
 	return au
 }
 
@@ -77,19 +105,33 @@ func (au *AccountUpdate) SetDisabled(b bool) *AccountUpdate {
 	return au
 }
 
-// AddOauthIDs adds the "oauth" edge to the OAuth entity by IDs.
-func (au *AccountUpdate) AddOauthIDs(ids ...int) *AccountUpdate {
-	au.mutation.AddOauthIDs(ids...)
+// SetNillableDisabled sets the "disabled" field if the given value is not nil.
+func (au *AccountUpdate) SetNillableDisabled(b *bool) *AccountUpdate {
+	if b != nil {
+		au.SetDisabled(*b)
+	}
 	return au
 }
 
-// AddOauth adds the "oauth" edges to the OAuth entity.
-func (au *AccountUpdate) AddOauth(o ...*OAuth) *AccountUpdate {
-	ids := make([]int, len(o))
-	for i := range o {
-		ids[i] = o[i].ID
+// SetSource sets the "source" field.
+func (au *AccountUpdate) SetSource(s string) *AccountUpdate {
+	au.mutation.SetSource(s)
+	return au
+}
+
+// AddSubAccountIDs adds the "subAccounts" edge to the SubAccount entity by IDs.
+func (au *AccountUpdate) AddSubAccountIDs(ids ...int) *AccountUpdate {
+	au.mutation.AddSubAccountIDs(ids...)
+	return au
+}
+
+// AddSubAccounts adds the "subAccounts" edges to the SubAccount entity.
+func (au *AccountUpdate) AddSubAccounts(s ...*SubAccount) *AccountUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
 	}
-	return au.AddOauthIDs(ids...)
+	return au.AddSubAccountIDs(ids...)
 }
 
 // Mutation returns the AccountMutation object of the builder.
@@ -97,25 +139,25 @@ func (au *AccountUpdate) Mutation() *AccountMutation {
 	return au.mutation
 }
 
-// ClearOauth clears all "oauth" edges to the OAuth entity.
-func (au *AccountUpdate) ClearOauth() *AccountUpdate {
-	au.mutation.ClearOauth()
+// ClearSubAccounts clears all "subAccounts" edges to the SubAccount entity.
+func (au *AccountUpdate) ClearSubAccounts() *AccountUpdate {
+	au.mutation.ClearSubAccounts()
 	return au
 }
 
-// RemoveOauthIDs removes the "oauth" edge to OAuth entities by IDs.
-func (au *AccountUpdate) RemoveOauthIDs(ids ...int) *AccountUpdate {
-	au.mutation.RemoveOauthIDs(ids...)
+// RemoveSubAccountIDs removes the "subAccounts" edge to SubAccount entities by IDs.
+func (au *AccountUpdate) RemoveSubAccountIDs(ids ...int) *AccountUpdate {
+	au.mutation.RemoveSubAccountIDs(ids...)
 	return au
 }
 
-// RemoveOauth removes "oauth" edges to OAuth entities.
-func (au *AccountUpdate) RemoveOauth(o ...*OAuth) *AccountUpdate {
-	ids := make([]int, len(o))
-	for i := range o {
-		ids[i] = o[i].ID
+// RemoveSubAccounts removes "subAccounts" edges to SubAccount entities.
+func (au *AccountUpdate) RemoveSubAccounts(s ...*SubAccount) *AccountUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
 	}
-	return au.RemoveOauthIDs(ids...)
+	return au.RemoveSubAccountIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -213,11 +255,25 @@ func (au *AccountUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: account.FieldUpdateBy,
 		})
 	}
-	if value, ok := au.mutation.AppID(); ok {
+	if value, ok := au.mutation.Deleted(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: account.FieldDeleted,
+		})
+	}
+	if value, ok := au.mutation.Email(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: account.FieldAppID,
+			Column: account.FieldEmail,
+		})
+	}
+	if value, ok := au.mutation.EmailConfirmed(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: account.FieldEmailConfirmed,
 		})
 	}
 	if value, ok := au.mutation.Mobile(); ok {
@@ -255,33 +311,40 @@ func (au *AccountUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: account.FieldDisabled,
 		})
 	}
-	if au.mutation.OauthCleared() {
+	if value, ok := au.mutation.Source(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: account.FieldSource,
+		})
+	}
+	if au.mutation.SubAccountsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   account.OauthTable,
-			Columns: []string{account.OauthColumn},
+			Table:   account.SubAccountsTable,
+			Columns: account.SubAccountsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: oauth.FieldID,
+					Column: subaccount.FieldID,
 				},
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := au.mutation.RemovedOauthIDs(); len(nodes) > 0 && !au.mutation.OauthCleared() {
+	if nodes := au.mutation.RemovedSubAccountsIDs(); len(nodes) > 0 && !au.mutation.SubAccountsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   account.OauthTable,
-			Columns: []string{account.OauthColumn},
+			Table:   account.SubAccountsTable,
+			Columns: account.SubAccountsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: oauth.FieldID,
+					Column: subaccount.FieldID,
 				},
 			},
 		}
@@ -290,17 +353,17 @@ func (au *AccountUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := au.mutation.OauthIDs(); len(nodes) > 0 {
+	if nodes := au.mutation.SubAccountsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   account.OauthTable,
-			Columns: []string{account.OauthColumn},
+			Table:   account.SubAccountsTable,
+			Columns: account.SubAccountsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: oauth.FieldID,
+					Column: subaccount.FieldID,
 				},
 			},
 		}
@@ -340,9 +403,37 @@ func (auo *AccountUpdateOne) SetUpdateBy(s string) *AccountUpdateOne {
 	return auo
 }
 
-// SetAppID sets the "app_id" field.
-func (auo *AccountUpdateOne) SetAppID(s string) *AccountUpdateOne {
-	auo.mutation.SetAppID(s)
+// SetDeleted sets the "deleted" field.
+func (auo *AccountUpdateOne) SetDeleted(b bool) *AccountUpdateOne {
+	auo.mutation.SetDeleted(b)
+	return auo
+}
+
+// SetNillableDeleted sets the "deleted" field if the given value is not nil.
+func (auo *AccountUpdateOne) SetNillableDeleted(b *bool) *AccountUpdateOne {
+	if b != nil {
+		auo.SetDeleted(*b)
+	}
+	return auo
+}
+
+// SetEmail sets the "email" field.
+func (auo *AccountUpdateOne) SetEmail(s string) *AccountUpdateOne {
+	auo.mutation.SetEmail(s)
+	return auo
+}
+
+// SetEmailConfirmed sets the "email_confirmed" field.
+func (auo *AccountUpdateOne) SetEmailConfirmed(b bool) *AccountUpdateOne {
+	auo.mutation.SetEmailConfirmed(b)
+	return auo
+}
+
+// SetNillableEmailConfirmed sets the "email_confirmed" field if the given value is not nil.
+func (auo *AccountUpdateOne) SetNillableEmailConfirmed(b *bool) *AccountUpdateOne {
+	if b != nil {
+		auo.SetEmailConfirmed(*b)
+	}
 	return auo
 }
 
@@ -376,19 +467,33 @@ func (auo *AccountUpdateOne) SetDisabled(b bool) *AccountUpdateOne {
 	return auo
 }
 
-// AddOauthIDs adds the "oauth" edge to the OAuth entity by IDs.
-func (auo *AccountUpdateOne) AddOauthIDs(ids ...int) *AccountUpdateOne {
-	auo.mutation.AddOauthIDs(ids...)
+// SetNillableDisabled sets the "disabled" field if the given value is not nil.
+func (auo *AccountUpdateOne) SetNillableDisabled(b *bool) *AccountUpdateOne {
+	if b != nil {
+		auo.SetDisabled(*b)
+	}
 	return auo
 }
 
-// AddOauth adds the "oauth" edges to the OAuth entity.
-func (auo *AccountUpdateOne) AddOauth(o ...*OAuth) *AccountUpdateOne {
-	ids := make([]int, len(o))
-	for i := range o {
-		ids[i] = o[i].ID
+// SetSource sets the "source" field.
+func (auo *AccountUpdateOne) SetSource(s string) *AccountUpdateOne {
+	auo.mutation.SetSource(s)
+	return auo
+}
+
+// AddSubAccountIDs adds the "subAccounts" edge to the SubAccount entity by IDs.
+func (auo *AccountUpdateOne) AddSubAccountIDs(ids ...int) *AccountUpdateOne {
+	auo.mutation.AddSubAccountIDs(ids...)
+	return auo
+}
+
+// AddSubAccounts adds the "subAccounts" edges to the SubAccount entity.
+func (auo *AccountUpdateOne) AddSubAccounts(s ...*SubAccount) *AccountUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
 	}
-	return auo.AddOauthIDs(ids...)
+	return auo.AddSubAccountIDs(ids...)
 }
 
 // Mutation returns the AccountMutation object of the builder.
@@ -396,25 +501,25 @@ func (auo *AccountUpdateOne) Mutation() *AccountMutation {
 	return auo.mutation
 }
 
-// ClearOauth clears all "oauth" edges to the OAuth entity.
-func (auo *AccountUpdateOne) ClearOauth() *AccountUpdateOne {
-	auo.mutation.ClearOauth()
+// ClearSubAccounts clears all "subAccounts" edges to the SubAccount entity.
+func (auo *AccountUpdateOne) ClearSubAccounts() *AccountUpdateOne {
+	auo.mutation.ClearSubAccounts()
 	return auo
 }
 
-// RemoveOauthIDs removes the "oauth" edge to OAuth entities by IDs.
-func (auo *AccountUpdateOne) RemoveOauthIDs(ids ...int) *AccountUpdateOne {
-	auo.mutation.RemoveOauthIDs(ids...)
+// RemoveSubAccountIDs removes the "subAccounts" edge to SubAccount entities by IDs.
+func (auo *AccountUpdateOne) RemoveSubAccountIDs(ids ...int) *AccountUpdateOne {
+	auo.mutation.RemoveSubAccountIDs(ids...)
 	return auo
 }
 
-// RemoveOauth removes "oauth" edges to OAuth entities.
-func (auo *AccountUpdateOne) RemoveOauth(o ...*OAuth) *AccountUpdateOne {
-	ids := make([]int, len(o))
-	for i := range o {
-		ids[i] = o[i].ID
+// RemoveSubAccounts removes "subAccounts" edges to SubAccount entities.
+func (auo *AccountUpdateOne) RemoveSubAccounts(s ...*SubAccount) *AccountUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
 	}
-	return auo.RemoveOauthIDs(ids...)
+	return auo.RemoveSubAccountIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -536,11 +641,25 @@ func (auo *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err e
 			Column: account.FieldUpdateBy,
 		})
 	}
-	if value, ok := auo.mutation.AppID(); ok {
+	if value, ok := auo.mutation.Deleted(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: account.FieldDeleted,
+		})
+	}
+	if value, ok := auo.mutation.Email(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: account.FieldAppID,
+			Column: account.FieldEmail,
+		})
+	}
+	if value, ok := auo.mutation.EmailConfirmed(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: account.FieldEmailConfirmed,
 		})
 	}
 	if value, ok := auo.mutation.Mobile(); ok {
@@ -578,33 +697,40 @@ func (auo *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err e
 			Column: account.FieldDisabled,
 		})
 	}
-	if auo.mutation.OauthCleared() {
+	if value, ok := auo.mutation.Source(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: account.FieldSource,
+		})
+	}
+	if auo.mutation.SubAccountsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   account.OauthTable,
-			Columns: []string{account.OauthColumn},
+			Table:   account.SubAccountsTable,
+			Columns: account.SubAccountsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: oauth.FieldID,
+					Column: subaccount.FieldID,
 				},
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := auo.mutation.RemovedOauthIDs(); len(nodes) > 0 && !auo.mutation.OauthCleared() {
+	if nodes := auo.mutation.RemovedSubAccountsIDs(); len(nodes) > 0 && !auo.mutation.SubAccountsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   account.OauthTable,
-			Columns: []string{account.OauthColumn},
+			Table:   account.SubAccountsTable,
+			Columns: account.SubAccountsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: oauth.FieldID,
+					Column: subaccount.FieldID,
 				},
 			},
 		}
@@ -613,17 +739,17 @@ func (auo *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err e
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := auo.mutation.OauthIDs(); len(nodes) > 0 {
+	if nodes := auo.mutation.SubAccountsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   account.OauthTable,
-			Columns: []string{account.OauthColumn},
+			Table:   account.SubAccountsTable,
+			Columns: account.SubAccountsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: oauth.FieldID,
+					Column: subaccount.FieldID,
 				},
 			},
 		}

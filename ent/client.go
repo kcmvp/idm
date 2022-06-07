@@ -10,7 +10,10 @@ import (
 	"github.com/kcmvp/iam.go/ent/migrate"
 
 	"github.com/kcmvp/iam.go/ent/account"
-	"github.com/kcmvp/iam.go/ent/oauth"
+	"github.com/kcmvp/iam.go/ent/application"
+	"github.com/kcmvp/iam.go/ent/role"
+	"github.com/kcmvp/iam.go/ent/rolefunc"
+	"github.com/kcmvp/iam.go/ent/subaccount"
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
@@ -24,8 +27,14 @@ type Client struct {
 	Schema *migrate.Schema
 	// Account is the client for interacting with the Account builders.
 	Account *AccountClient
-	// OAuth is the client for interacting with the OAuth builders.
-	OAuth *OAuthClient
+	// Application is the client for interacting with the Application builders.
+	Application *ApplicationClient
+	// Role is the client for interacting with the Role builders.
+	Role *RoleClient
+	// RoleFunc is the client for interacting with the RoleFunc builders.
+	RoleFunc *RoleFuncClient
+	// SubAccount is the client for interacting with the SubAccount builders.
+	SubAccount *SubAccountClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -40,7 +49,10 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Account = NewAccountClient(c.config)
-	c.OAuth = NewOAuthClient(c.config)
+	c.Application = NewApplicationClient(c.config)
+	c.Role = NewRoleClient(c.config)
+	c.RoleFunc = NewRoleFuncClient(c.config)
+	c.SubAccount = NewSubAccountClient(c.config)
 }
 
 // Open opens a database/sql.DB specified by the driver name and
@@ -72,10 +84,13 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:     ctx,
-		config:  cfg,
-		Account: NewAccountClient(cfg),
-		OAuth:   NewOAuthClient(cfg),
+		ctx:         ctx,
+		config:      cfg,
+		Account:     NewAccountClient(cfg),
+		Application: NewApplicationClient(cfg),
+		Role:        NewRoleClient(cfg),
+		RoleFunc:    NewRoleFuncClient(cfg),
+		SubAccount:  NewSubAccountClient(cfg),
 	}, nil
 }
 
@@ -93,10 +108,13 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:     ctx,
-		config:  cfg,
-		Account: NewAccountClient(cfg),
-		OAuth:   NewOAuthClient(cfg),
+		ctx:         ctx,
+		config:      cfg,
+		Account:     NewAccountClient(cfg),
+		Application: NewApplicationClient(cfg),
+		Role:        NewRoleClient(cfg),
+		RoleFunc:    NewRoleFuncClient(cfg),
+		SubAccount:  NewSubAccountClient(cfg),
 	}, nil
 }
 
@@ -127,7 +145,10 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.Account.Use(hooks...)
-	c.OAuth.Use(hooks...)
+	c.Application.Use(hooks...)
+	c.Role.Use(hooks...)
+	c.RoleFunc.Use(hooks...)
+	c.SubAccount.Use(hooks...)
 }
 
 // AccountClient is a client for the Account schema.
@@ -215,15 +236,15 @@ func (c *AccountClient) GetX(ctx context.Context, id int) *Account {
 	return obj
 }
 
-// QueryOauth queries the oauth edge of a Account.
-func (c *AccountClient) QueryOauth(a *Account) *OAuthQuery {
-	query := &OAuthQuery{config: c.config}
+// QuerySubAccounts queries the subAccounts edge of a Account.
+func (c *AccountClient) QuerySubAccounts(a *Account) *SubAccountQuery {
+	query := &SubAccountQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := a.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(account.Table, account.FieldID, id),
-			sqlgraph.To(oauth.Table, oauth.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, account.OauthTable, account.OauthColumn),
+			sqlgraph.To(subaccount.Table, subaccount.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, account.SubAccountsTable, account.SubAccountsPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil
@@ -236,84 +257,84 @@ func (c *AccountClient) Hooks() []Hook {
 	return c.hooks.Account
 }
 
-// OAuthClient is a client for the OAuth schema.
-type OAuthClient struct {
+// ApplicationClient is a client for the Application schema.
+type ApplicationClient struct {
 	config
 }
 
-// NewOAuthClient returns a client for the OAuth from the given config.
-func NewOAuthClient(c config) *OAuthClient {
-	return &OAuthClient{config: c}
+// NewApplicationClient returns a client for the Application from the given config.
+func NewApplicationClient(c config) *ApplicationClient {
+	return &ApplicationClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `oauth.Hooks(f(g(h())))`.
-func (c *OAuthClient) Use(hooks ...Hook) {
-	c.hooks.OAuth = append(c.hooks.OAuth, hooks...)
+// A call to `Use(f, g, h)` equals to `application.Hooks(f(g(h())))`.
+func (c *ApplicationClient) Use(hooks ...Hook) {
+	c.hooks.Application = append(c.hooks.Application, hooks...)
 }
 
-// Create returns a create builder for OAuth.
-func (c *OAuthClient) Create() *OAuthCreate {
-	mutation := newOAuthMutation(c.config, OpCreate)
-	return &OAuthCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a create builder for Application.
+func (c *ApplicationClient) Create() *ApplicationCreate {
+	mutation := newApplicationMutation(c.config, OpCreate)
+	return &ApplicationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of OAuth entities.
-func (c *OAuthClient) CreateBulk(builders ...*OAuthCreate) *OAuthCreateBulk {
-	return &OAuthCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of Application entities.
+func (c *ApplicationClient) CreateBulk(builders ...*ApplicationCreate) *ApplicationCreateBulk {
+	return &ApplicationCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for OAuth.
-func (c *OAuthClient) Update() *OAuthUpdate {
-	mutation := newOAuthMutation(c.config, OpUpdate)
-	return &OAuthUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for Application.
+func (c *ApplicationClient) Update() *ApplicationUpdate {
+	mutation := newApplicationMutation(c.config, OpUpdate)
+	return &ApplicationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *OAuthClient) UpdateOne(o *OAuth) *OAuthUpdateOne {
-	mutation := newOAuthMutation(c.config, OpUpdateOne, withOAuth(o))
-	return &OAuthUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *ApplicationClient) UpdateOne(a *Application) *ApplicationUpdateOne {
+	mutation := newApplicationMutation(c.config, OpUpdateOne, withApplication(a))
+	return &ApplicationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *OAuthClient) UpdateOneID(id int) *OAuthUpdateOne {
-	mutation := newOAuthMutation(c.config, OpUpdateOne, withOAuthID(id))
-	return &OAuthUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *ApplicationClient) UpdateOneID(id int) *ApplicationUpdateOne {
+	mutation := newApplicationMutation(c.config, OpUpdateOne, withApplicationID(id))
+	return &ApplicationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for OAuth.
-func (c *OAuthClient) Delete() *OAuthDelete {
-	mutation := newOAuthMutation(c.config, OpDelete)
-	return &OAuthDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for Application.
+func (c *ApplicationClient) Delete() *ApplicationDelete {
+	mutation := newApplicationMutation(c.config, OpDelete)
+	return &ApplicationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a delete builder for the given entity.
-func (c *OAuthClient) DeleteOne(o *OAuth) *OAuthDeleteOne {
-	return c.DeleteOneID(o.ID)
+func (c *ApplicationClient) DeleteOne(a *Application) *ApplicationDeleteOne {
+	return c.DeleteOneID(a.ID)
 }
 
 // DeleteOneID returns a delete builder for the given id.
-func (c *OAuthClient) DeleteOneID(id int) *OAuthDeleteOne {
-	builder := c.Delete().Where(oauth.ID(id))
+func (c *ApplicationClient) DeleteOneID(id int) *ApplicationDeleteOne {
+	builder := c.Delete().Where(application.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &OAuthDeleteOne{builder}
+	return &ApplicationDeleteOne{builder}
 }
 
-// Query returns a query builder for OAuth.
-func (c *OAuthClient) Query() *OAuthQuery {
-	return &OAuthQuery{
+// Query returns a query builder for Application.
+func (c *ApplicationClient) Query() *ApplicationQuery {
+	return &ApplicationQuery{
 		config: c.config,
 	}
 }
 
-// Get returns a OAuth entity by its id.
-func (c *OAuthClient) Get(ctx context.Context, id int) (*OAuth, error) {
-	return c.Query().Where(oauth.ID(id)).Only(ctx)
+// Get returns a Application entity by its id.
+func (c *ApplicationClient) Get(ctx context.Context, id int) (*Application, error) {
+	return c.Query().Where(application.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *OAuthClient) GetX(ctx context.Context, id int) *OAuth {
+func (c *ApplicationClient) GetX(ctx context.Context, id int) *Application {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -321,23 +342,357 @@ func (c *OAuthClient) GetX(ctx context.Context, id int) *OAuth {
 	return obj
 }
 
-// QueryAccount queries the account edge of a OAuth.
-func (c *OAuthClient) QueryAccount(o *OAuth) *AccountQuery {
-	query := &AccountQuery{config: c.config}
+// QueryRoles queries the roles edge of a Application.
+func (c *ApplicationClient) QueryRoles(a *Application) *RoleQuery {
+	query := &RoleQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := o.ID
+		id := a.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(oauth.Table, oauth.FieldID, id),
-			sqlgraph.To(account.Table, account.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, oauth.AccountTable, oauth.AccountColumn),
+			sqlgraph.From(application.Table, application.FieldID, id),
+			sqlgraph.To(role.Table, role.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, application.RolesTable, application.RolesPrimaryKey...),
 		)
-		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // Hooks returns the client hooks.
-func (c *OAuthClient) Hooks() []Hook {
-	return c.hooks.OAuth
+func (c *ApplicationClient) Hooks() []Hook {
+	return c.hooks.Application
+}
+
+// RoleClient is a client for the Role schema.
+type RoleClient struct {
+	config
+}
+
+// NewRoleClient returns a client for the Role from the given config.
+func NewRoleClient(c config) *RoleClient {
+	return &RoleClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `role.Hooks(f(g(h())))`.
+func (c *RoleClient) Use(hooks ...Hook) {
+	c.hooks.Role = append(c.hooks.Role, hooks...)
+}
+
+// Create returns a create builder for Role.
+func (c *RoleClient) Create() *RoleCreate {
+	mutation := newRoleMutation(c.config, OpCreate)
+	return &RoleCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Role entities.
+func (c *RoleClient) CreateBulk(builders ...*RoleCreate) *RoleCreateBulk {
+	return &RoleCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Role.
+func (c *RoleClient) Update() *RoleUpdate {
+	mutation := newRoleMutation(c.config, OpUpdate)
+	return &RoleUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RoleClient) UpdateOne(r *Role) *RoleUpdateOne {
+	mutation := newRoleMutation(c.config, OpUpdateOne, withRole(r))
+	return &RoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RoleClient) UpdateOneID(id int) *RoleUpdateOne {
+	mutation := newRoleMutation(c.config, OpUpdateOne, withRoleID(id))
+	return &RoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Role.
+func (c *RoleClient) Delete() *RoleDelete {
+	mutation := newRoleMutation(c.config, OpDelete)
+	return &RoleDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *RoleClient) DeleteOne(r *Role) *RoleDeleteOne {
+	return c.DeleteOneID(r.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *RoleClient) DeleteOneID(id int) *RoleDeleteOne {
+	builder := c.Delete().Where(role.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RoleDeleteOne{builder}
+}
+
+// Query returns a query builder for Role.
+func (c *RoleClient) Query() *RoleQuery {
+	return &RoleQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Role entity by its id.
+func (c *RoleClient) Get(ctx context.Context, id int) (*Role, error) {
+	return c.Query().Where(role.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RoleClient) GetX(ctx context.Context, id int) *Role {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryApplication queries the application edge of a Role.
+func (c *RoleClient) QueryApplication(r *Role) *ApplicationQuery {
+	query := &ApplicationQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(role.Table, role.FieldID, id),
+			sqlgraph.To(application.Table, application.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, role.ApplicationTable, role.ApplicationPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryFuncs queries the funcs edge of a Role.
+func (c *RoleClient) QueryFuncs(r *Role) *RoleFuncQuery {
+	query := &RoleFuncQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(role.Table, role.FieldID, id),
+			sqlgraph.To(rolefunc.Table, rolefunc.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, role.FuncsTable, role.FuncsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *RoleClient) Hooks() []Hook {
+	return c.hooks.Role
+}
+
+// RoleFuncClient is a client for the RoleFunc schema.
+type RoleFuncClient struct {
+	config
+}
+
+// NewRoleFuncClient returns a client for the RoleFunc from the given config.
+func NewRoleFuncClient(c config) *RoleFuncClient {
+	return &RoleFuncClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `rolefunc.Hooks(f(g(h())))`.
+func (c *RoleFuncClient) Use(hooks ...Hook) {
+	c.hooks.RoleFunc = append(c.hooks.RoleFunc, hooks...)
+}
+
+// Create returns a create builder for RoleFunc.
+func (c *RoleFuncClient) Create() *RoleFuncCreate {
+	mutation := newRoleFuncMutation(c.config, OpCreate)
+	return &RoleFuncCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of RoleFunc entities.
+func (c *RoleFuncClient) CreateBulk(builders ...*RoleFuncCreate) *RoleFuncCreateBulk {
+	return &RoleFuncCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for RoleFunc.
+func (c *RoleFuncClient) Update() *RoleFuncUpdate {
+	mutation := newRoleFuncMutation(c.config, OpUpdate)
+	return &RoleFuncUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RoleFuncClient) UpdateOne(rf *RoleFunc) *RoleFuncUpdateOne {
+	mutation := newRoleFuncMutation(c.config, OpUpdateOne, withRoleFunc(rf))
+	return &RoleFuncUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RoleFuncClient) UpdateOneID(id int) *RoleFuncUpdateOne {
+	mutation := newRoleFuncMutation(c.config, OpUpdateOne, withRoleFuncID(id))
+	return &RoleFuncUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for RoleFunc.
+func (c *RoleFuncClient) Delete() *RoleFuncDelete {
+	mutation := newRoleFuncMutation(c.config, OpDelete)
+	return &RoleFuncDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *RoleFuncClient) DeleteOne(rf *RoleFunc) *RoleFuncDeleteOne {
+	return c.DeleteOneID(rf.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *RoleFuncClient) DeleteOneID(id int) *RoleFuncDeleteOne {
+	builder := c.Delete().Where(rolefunc.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RoleFuncDeleteOne{builder}
+}
+
+// Query returns a query builder for RoleFunc.
+func (c *RoleFuncClient) Query() *RoleFuncQuery {
+	return &RoleFuncQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a RoleFunc entity by its id.
+func (c *RoleFuncClient) Get(ctx context.Context, id int) (*RoleFunc, error) {
+	return c.Query().Where(rolefunc.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RoleFuncClient) GetX(ctx context.Context, id int) *RoleFunc {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryRole queries the role edge of a RoleFunc.
+func (c *RoleFuncClient) QueryRole(rf *RoleFunc) *RoleQuery {
+	query := &RoleQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := rf.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(rolefunc.Table, rolefunc.FieldID, id),
+			sqlgraph.To(role.Table, role.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, rolefunc.RoleTable, rolefunc.RolePrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(rf.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *RoleFuncClient) Hooks() []Hook {
+	return c.hooks.RoleFunc
+}
+
+// SubAccountClient is a client for the SubAccount schema.
+type SubAccountClient struct {
+	config
+}
+
+// NewSubAccountClient returns a client for the SubAccount from the given config.
+func NewSubAccountClient(c config) *SubAccountClient {
+	return &SubAccountClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `subaccount.Hooks(f(g(h())))`.
+func (c *SubAccountClient) Use(hooks ...Hook) {
+	c.hooks.SubAccount = append(c.hooks.SubAccount, hooks...)
+}
+
+// Create returns a create builder for SubAccount.
+func (c *SubAccountClient) Create() *SubAccountCreate {
+	mutation := newSubAccountMutation(c.config, OpCreate)
+	return &SubAccountCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SubAccount entities.
+func (c *SubAccountClient) CreateBulk(builders ...*SubAccountCreate) *SubAccountCreateBulk {
+	return &SubAccountCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SubAccount.
+func (c *SubAccountClient) Update() *SubAccountUpdate {
+	mutation := newSubAccountMutation(c.config, OpUpdate)
+	return &SubAccountUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SubAccountClient) UpdateOne(sa *SubAccount) *SubAccountUpdateOne {
+	mutation := newSubAccountMutation(c.config, OpUpdateOne, withSubAccount(sa))
+	return &SubAccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SubAccountClient) UpdateOneID(id int) *SubAccountUpdateOne {
+	mutation := newSubAccountMutation(c.config, OpUpdateOne, withSubAccountID(id))
+	return &SubAccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SubAccount.
+func (c *SubAccountClient) Delete() *SubAccountDelete {
+	mutation := newSubAccountMutation(c.config, OpDelete)
+	return &SubAccountDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *SubAccountClient) DeleteOne(sa *SubAccount) *SubAccountDeleteOne {
+	return c.DeleteOneID(sa.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *SubAccountClient) DeleteOneID(id int) *SubAccountDeleteOne {
+	builder := c.Delete().Where(subaccount.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SubAccountDeleteOne{builder}
+}
+
+// Query returns a query builder for SubAccount.
+func (c *SubAccountClient) Query() *SubAccountQuery {
+	return &SubAccountQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a SubAccount entity by its id.
+func (c *SubAccountClient) Get(ctx context.Context, id int) (*SubAccount, error) {
+	return c.Query().Where(subaccount.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SubAccountClient) GetX(ctx context.Context, id int) *SubAccount {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryAccoun queries the accoun edge of a SubAccount.
+func (c *SubAccountClient) QueryAccoun(sa *SubAccount) *AccountQuery {
+	query := &AccountQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := sa.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(subaccount.Table, subaccount.FieldID, id),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, subaccount.AccounTable, subaccount.AccounPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(sa.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *SubAccountClient) Hooks() []Hook {
+	return c.hooks.SubAccount
 }
