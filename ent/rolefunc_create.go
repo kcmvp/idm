@@ -10,8 +10,8 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/kcmvp/iam.go/ent/role"
-	"github.com/kcmvp/iam.go/ent/rolefunc"
+	"github.com/kcmvp/idm.go/ent/role"
+	"github.com/kcmvp/idm.go/ent/rolefunc"
 )
 
 // RoleFuncCreate is the builder for creating a RoleFunc entity.

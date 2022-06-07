@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/kcmvp/iam.go/ent/role"
+	"github.com/kcmvp/idm.go/ent/role"
 )
 
 // Role is the model entity for the Role schema.

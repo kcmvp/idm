@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/kcmvp/iam.go/ent/rolefunc"
+	"github.com/kcmvp/idm.go/ent/rolefunc"
 )
 
 // RoleFunc is the model entity for the RoleFunc schema.

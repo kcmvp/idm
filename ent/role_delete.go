@@ -9,8 +9,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/kcmvp/iam.go/ent/predicate"
-	"github.com/kcmvp/iam.go/ent/role"
+	"github.com/kcmvp/idm.go/ent/predicate"
+	"github.com/kcmvp/idm.go/ent/role"
 )
 
 // RoleDelete is the builder for deleting a Role entity.

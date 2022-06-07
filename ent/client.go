@@ -7,13 +7,13 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/kcmvp/iam.go/ent/migrate"
+	"github.com/kcmvp/idm.go/ent/migrate"
 
-	"github.com/kcmvp/iam.go/ent/account"
-	"github.com/kcmvp/iam.go/ent/application"
-	"github.com/kcmvp/iam.go/ent/role"
-	"github.com/kcmvp/iam.go/ent/rolefunc"
-	"github.com/kcmvp/iam.go/ent/subaccount"
+	"github.com/kcmvp/idm.go/ent/account"
+	"github.com/kcmvp/idm.go/ent/application"
+	"github.com/kcmvp/idm.go/ent/role"
+	"github.com/kcmvp/idm.go/ent/rolefunc"
+	"github.com/kcmvp/idm.go/ent/subaccount"
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"

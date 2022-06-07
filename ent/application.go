@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/kcmvp/iam.go/ent/application"
+	"github.com/kcmvp/idm.go/ent/application"
 )
 
 // Application is the model entity for the Application schema.

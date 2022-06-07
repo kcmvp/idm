@@ -11,10 +11,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/kcmvp/iam.go/ent/account"
-	"github.com/kcmvp/iam.go/ent/predicate"
-	"github.com/kcmvp/iam.go/ent/schema"
-	"github.com/kcmvp/iam.go/ent/subaccount"
+	"github.com/kcmvp/idm.go/ent/account"
+	"github.com/kcmvp/idm.go/ent/predicate"
+	"github.com/kcmvp/idm.go/ent/schema"
+	"github.com/kcmvp/idm.go/ent/subaccount"
 )
 
 // SubAccountUpdate is the builder for updating SubAccount entities.

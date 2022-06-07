@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kcmvp/iam.go/ent"
+	"github.com/kcmvp/idm.go/ent"
 )
 
 // The AccountFunc type is an adapter to allow the use of ordinary

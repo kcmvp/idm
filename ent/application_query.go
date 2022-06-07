@@ -12,9 +12,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/kcmvp/iam.go/ent/application"
-	"github.com/kcmvp/iam.go/ent/predicate"
-	"github.com/kcmvp/iam.go/ent/role"
+	"github.com/kcmvp/idm.go/ent/application"
+	"github.com/kcmvp/idm.go/ent/predicate"
+	"github.com/kcmvp/idm.go/ent/role"
 )
 
 // ApplicationQuery is the builder for querying Application entities.

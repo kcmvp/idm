@@ -8,11 +8,11 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/kcmvp/iam.go/ent/account"
-	"github.com/kcmvp/iam.go/ent/application"
-	"github.com/kcmvp/iam.go/ent/role"
-	"github.com/kcmvp/iam.go/ent/rolefunc"
-	"github.com/kcmvp/iam.go/ent/subaccount"
+	"github.com/kcmvp/idm.go/ent/account"
+	"github.com/kcmvp/idm.go/ent/application"
+	"github.com/kcmvp/idm.go/ent/role"
+	"github.com/kcmvp/idm.go/ent/rolefunc"
+	"github.com/kcmvp/idm.go/ent/subaccount"
 )
 
 // ent aliases to avoid import conflicts in user's code.

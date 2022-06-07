@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/kcmvp/iam.go/ent/account"
+	"github.com/kcmvp/idm.go/ent/account"
 )
 
 // Account is the model entity for the Account schema.

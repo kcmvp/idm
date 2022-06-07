@@ -5,9 +5,9 @@ package enttest
 import (
 	"context"
 
-	"github.com/kcmvp/iam.go/ent"
+	"github.com/kcmvp/idm.go/ent"
 	// required by schema hooks.
-	_ "github.com/kcmvp/iam.go/ent/runtime"
+	_ "github.com/kcmvp/idm.go/ent/runtime"
 
 	"entgo.io/ent/dialect/sql/schema"
 )
