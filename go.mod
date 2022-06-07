@@ -1,4 +1,4 @@
-module github.com/kcmvp/iam.go
+module github.com/kcmvp/IdM.go
 
 go 1.18
 
