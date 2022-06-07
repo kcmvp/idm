@@ -10,8 +10,8 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/kcmvp/idm.go/ent/application"
-	"github.com/kcmvp/idm.go/ent/role"
+	"github.com/kcmvp/idm/ent/application"
+	"github.com/kcmvp/idm/ent/role"
 )
 
 // ApplicationCreate is the builder for creating a Application entity.

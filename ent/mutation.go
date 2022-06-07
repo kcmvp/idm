@@ -9,13 +9,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kcmvp/idm.go/ent/account"
-	"github.com/kcmvp/idm.go/ent/application"
-	"github.com/kcmvp/idm.go/ent/predicate"
-	"github.com/kcmvp/idm.go/ent/role"
-	"github.com/kcmvp/idm.go/ent/rolefunc"
-	"github.com/kcmvp/idm.go/ent/schema"
-	"github.com/kcmvp/idm.go/ent/subaccount"
+	"github.com/kcmvp/idm/ent/account"
+	"github.com/kcmvp/idm/ent/application"
+	"github.com/kcmvp/idm/ent/predicate"
+	"github.com/kcmvp/idm/ent/role"
+	"github.com/kcmvp/idm/ent/rolefunc"
+	"github.com/kcmvp/idm/ent/schema"
+	"github.com/kcmvp/idm/ent/subaccount"
 
 	"entgo.io/ent"
 )

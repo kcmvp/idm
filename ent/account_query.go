@@ -12,9 +12,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/kcmvp/idm.go/ent/account"
-	"github.com/kcmvp/idm.go/ent/predicate"
-	"github.com/kcmvp/idm.go/ent/subaccount"
+	"github.com/kcmvp/idm/ent/account"
+	"github.com/kcmvp/idm/ent/predicate"
+	"github.com/kcmvp/idm/ent/subaccount"
 )
 
 // AccountQuery is the builder for querying Account entities.

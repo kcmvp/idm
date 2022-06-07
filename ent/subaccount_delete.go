@@ -9,8 +9,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/kcmvp/idm.go/ent/predicate"
-	"github.com/kcmvp/idm.go/ent/subaccount"
+	"github.com/kcmvp/idm/ent/predicate"
+	"github.com/kcmvp/idm/ent/subaccount"
 )
 
 // SubAccountDelete is the builder for deleting a SubAccount entity.

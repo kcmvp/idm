@@ -1,4 +1,4 @@
-module github.com/kcmvp/idm.go
+module github.com/kcmvp/idm
 
 go 1.18
 

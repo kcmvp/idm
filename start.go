@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/kcmvp/idm.go/ent"
+	"github.com/kcmvp/idm/ent"
 	"log"
 	"net/http"
 )

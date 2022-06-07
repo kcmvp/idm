@@ -10,8 +10,8 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/kcmvp/idm.go/ent/account"
-	"github.com/kcmvp/idm.go/ent/subaccount"
+	"github.com/kcmvp/idm/ent/account"
+	"github.com/kcmvp/idm/ent/subaccount"
 )
 
 // AccountCreate is the builder for creating a Account entity.

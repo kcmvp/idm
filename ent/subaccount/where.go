@@ -7,8 +7,8 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/kcmvp/idm.go/ent/predicate"
-	"github.com/kcmvp/idm.go/ent/schema"
+	"github.com/kcmvp/idm/ent/predicate"
+	"github.com/kcmvp/idm/ent/schema"
 )
 
 // ID filters vertices based on their ID field.

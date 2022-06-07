@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/kcmvp/idm.go/ent/schema"
-	"github.com/kcmvp/idm.go/ent/subaccount"
+	"github.com/kcmvp/idm/ent/schema"
+	"github.com/kcmvp/idm/ent/subaccount"
 )
 
 // SubAccount is the model entity for the SubAccount schema.
