@@ -31,16 +31,18 @@ const (
 	EdgeFuncs = "funcs"
 	// Table holds the table name of the role in the database.
 	Table = "roles"
-	// ApplicationTable is the table that holds the application relation/edge. The primary key declared below.
-	ApplicationTable = "application_roles"
+	// ApplicationTable is the table that holds the application relation/edge.
+	ApplicationTable = "roles"
 	// ApplicationInverseTable is the table name for the Application entity.
 	// It exists in this package in order to avoid circular dependency with the "application" package.
 	ApplicationInverseTable = "applications"
+	// ApplicationColumn is the table column denoting the application relation/edge.
+	ApplicationColumn = "application_roles"
 	// FuncsTable is the table that holds the funcs relation/edge. The primary key declared below.
 	FuncsTable = "role_funcs"
-	// FuncsInverseTable is the table name for the RoleFunc entity.
-	// It exists in this package in order to avoid circular dependency with the "rolefunc" package.
-	FuncsInverseTable = "role_funcs"
+	// FuncsInverseTable is the table name for the Fun entity.
+	// It exists in this package in order to avoid circular dependency with the "fun" package.
+	FuncsInverseTable = "funs"
 )
 
 // Columns holds all SQL columns for role fields.
@@ -55,19 +57,27 @@ var Columns = []string{
 	FieldDesc,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "roles"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"application_roles",
+}
+
 var (
-	// ApplicationPrimaryKey and ApplicationColumn2 are the table columns denoting the
-	// primary key for the application relation (M2M).
-	ApplicationPrimaryKey = []string{"application_id", "role_id"}
 	// FuncsPrimaryKey and FuncsColumn2 are the table columns denoting the
 	// primary key for the funcs relation (M2M).
-	FuncsPrimaryKey = []string{"role_id", "role_func_id"}
+	FuncsPrimaryKey = []string{"role_id", "fun_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}

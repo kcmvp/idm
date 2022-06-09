@@ -12,9 +12,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/kcmvp/idm/ent/application"
+	"github.com/kcmvp/idm/ent/fun"
 	"github.com/kcmvp/idm/ent/predicate"
 	"github.com/kcmvp/idm/ent/role"
-	"github.com/kcmvp/idm/ent/rolefunc"
 )
 
 // RoleUpdate is the builder for updating Role entities.
@@ -68,32 +68,36 @@ func (ru *RoleUpdate) SetDesc(s string) *RoleUpdate {
 	return ru
 }
 
-// AddApplicationIDs adds the "application" edge to the Application entity by IDs.
-func (ru *RoleUpdate) AddApplicationIDs(ids ...int) *RoleUpdate {
-	ru.mutation.AddApplicationIDs(ids...)
+// SetApplicationID sets the "application" edge to the Application entity by ID.
+func (ru *RoleUpdate) SetApplicationID(id int) *RoleUpdate {
+	ru.mutation.SetApplicationID(id)
 	return ru
 }
 
-// AddApplication adds the "application" edges to the Application entity.
-func (ru *RoleUpdate) AddApplication(a ...*Application) *RoleUpdate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+// SetNillableApplicationID sets the "application" edge to the Application entity by ID if the given value is not nil.
+func (ru *RoleUpdate) SetNillableApplicationID(id *int) *RoleUpdate {
+	if id != nil {
+		ru = ru.SetApplicationID(*id)
 	}
-	return ru.AddApplicationIDs(ids...)
+	return ru
 }
 
-// AddFuncIDs adds the "funcs" edge to the RoleFunc entity by IDs.
+// SetApplication sets the "application" edge to the Application entity.
+func (ru *RoleUpdate) SetApplication(a *Application) *RoleUpdate {
+	return ru.SetApplicationID(a.ID)
+}
+
+// AddFuncIDs adds the "funcs" edge to the Fun entity by IDs.
 func (ru *RoleUpdate) AddFuncIDs(ids ...int) *RoleUpdate {
 	ru.mutation.AddFuncIDs(ids...)
 	return ru
 }
 
-// AddFuncs adds the "funcs" edges to the RoleFunc entity.
-func (ru *RoleUpdate) AddFuncs(r ...*RoleFunc) *RoleUpdate {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+// AddFuncs adds the "funcs" edges to the Fun entity.
+func (ru *RoleUpdate) AddFuncs(f ...*Fun) *RoleUpdate {
+	ids := make([]int, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
 	}
 	return ru.AddFuncIDs(ids...)
 }
@@ -103,44 +107,29 @@ func (ru *RoleUpdate) Mutation() *RoleMutation {
 	return ru.mutation
 }
 
-// ClearApplication clears all "application" edges to the Application entity.
+// ClearApplication clears the "application" edge to the Application entity.
 func (ru *RoleUpdate) ClearApplication() *RoleUpdate {
 	ru.mutation.ClearApplication()
 	return ru
 }
 
-// RemoveApplicationIDs removes the "application" edge to Application entities by IDs.
-func (ru *RoleUpdate) RemoveApplicationIDs(ids ...int) *RoleUpdate {
-	ru.mutation.RemoveApplicationIDs(ids...)
-	return ru
-}
-
-// RemoveApplication removes "application" edges to Application entities.
-func (ru *RoleUpdate) RemoveApplication(a ...*Application) *RoleUpdate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return ru.RemoveApplicationIDs(ids...)
-}
-
-// ClearFuncs clears all "funcs" edges to the RoleFunc entity.
+// ClearFuncs clears all "funcs" edges to the Fun entity.
 func (ru *RoleUpdate) ClearFuncs() *RoleUpdate {
 	ru.mutation.ClearFuncs()
 	return ru
 }
 
-// RemoveFuncIDs removes the "funcs" edge to RoleFunc entities by IDs.
+// RemoveFuncIDs removes the "funcs" edge to Fun entities by IDs.
 func (ru *RoleUpdate) RemoveFuncIDs(ids ...int) *RoleUpdate {
 	ru.mutation.RemoveFuncIDs(ids...)
 	return ru
 }
 
-// RemoveFuncs removes "funcs" edges to RoleFunc entities.
-func (ru *RoleUpdate) RemoveFuncs(r ...*RoleFunc) *RoleUpdate {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+// RemoveFuncs removes "funcs" edges to Fun entities.
+func (ru *RoleUpdate) RemoveFuncs(f ...*Fun) *RoleUpdate {
+	ids := make([]int, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
 	}
 	return ru.RemoveFuncIDs(ids...)
 }
@@ -263,10 +252,10 @@ func (ru *RoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if ru.mutation.ApplicationCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   role.ApplicationTable,
-			Columns: role.ApplicationPrimaryKey,
+			Columns: []string{role.ApplicationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -274,34 +263,15 @@ func (ru *RoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 					Column: application.FieldID,
 				},
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ru.mutation.RemovedApplicationIDs(); len(nodes) > 0 && !ru.mutation.ApplicationCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   role.ApplicationTable,
-			Columns: role.ApplicationPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: application.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := ru.mutation.ApplicationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   role.ApplicationTable,
-			Columns: role.ApplicationPrimaryKey,
+			Columns: []string{role.ApplicationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -325,7 +295,7 @@ func (ru *RoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: rolefunc.FieldID,
+					Column: fun.FieldID,
 				},
 			},
 		}
@@ -341,7 +311,7 @@ func (ru *RoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: rolefunc.FieldID,
+					Column: fun.FieldID,
 				},
 			},
 		}
@@ -360,7 +330,7 @@ func (ru *RoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: rolefunc.FieldID,
+					Column: fun.FieldID,
 				},
 			},
 		}
@@ -426,32 +396,36 @@ func (ruo *RoleUpdateOne) SetDesc(s string) *RoleUpdateOne {
 	return ruo
 }
 
-// AddApplicationIDs adds the "application" edge to the Application entity by IDs.
-func (ruo *RoleUpdateOne) AddApplicationIDs(ids ...int) *RoleUpdateOne {
-	ruo.mutation.AddApplicationIDs(ids...)
+// SetApplicationID sets the "application" edge to the Application entity by ID.
+func (ruo *RoleUpdateOne) SetApplicationID(id int) *RoleUpdateOne {
+	ruo.mutation.SetApplicationID(id)
 	return ruo
 }
 
-// AddApplication adds the "application" edges to the Application entity.
-func (ruo *RoleUpdateOne) AddApplication(a ...*Application) *RoleUpdateOne {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+// SetNillableApplicationID sets the "application" edge to the Application entity by ID if the given value is not nil.
+func (ruo *RoleUpdateOne) SetNillableApplicationID(id *int) *RoleUpdateOne {
+	if id != nil {
+		ruo = ruo.SetApplicationID(*id)
 	}
-	return ruo.AddApplicationIDs(ids...)
+	return ruo
 }
 
-// AddFuncIDs adds the "funcs" edge to the RoleFunc entity by IDs.
+// SetApplication sets the "application" edge to the Application entity.
+func (ruo *RoleUpdateOne) SetApplication(a *Application) *RoleUpdateOne {
+	return ruo.SetApplicationID(a.ID)
+}
+
+// AddFuncIDs adds the "funcs" edge to the Fun entity by IDs.
 func (ruo *RoleUpdateOne) AddFuncIDs(ids ...int) *RoleUpdateOne {
 	ruo.mutation.AddFuncIDs(ids...)
 	return ruo
 }
 
-// AddFuncs adds the "funcs" edges to the RoleFunc entity.
-func (ruo *RoleUpdateOne) AddFuncs(r ...*RoleFunc) *RoleUpdateOne {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+// AddFuncs adds the "funcs" edges to the Fun entity.
+func (ruo *RoleUpdateOne) AddFuncs(f ...*Fun) *RoleUpdateOne {
+	ids := make([]int, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
 	}
 	return ruo.AddFuncIDs(ids...)
 }
@@ -461,44 +435,29 @@ func (ruo *RoleUpdateOne) Mutation() *RoleMutation {
 	return ruo.mutation
 }
 
-// ClearApplication clears all "application" edges to the Application entity.
+// ClearApplication clears the "application" edge to the Application entity.
 func (ruo *RoleUpdateOne) ClearApplication() *RoleUpdateOne {
 	ruo.mutation.ClearApplication()
 	return ruo
 }
 
-// RemoveApplicationIDs removes the "application" edge to Application entities by IDs.
-func (ruo *RoleUpdateOne) RemoveApplicationIDs(ids ...int) *RoleUpdateOne {
-	ruo.mutation.RemoveApplicationIDs(ids...)
-	return ruo
-}
-
-// RemoveApplication removes "application" edges to Application entities.
-func (ruo *RoleUpdateOne) RemoveApplication(a ...*Application) *RoleUpdateOne {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return ruo.RemoveApplicationIDs(ids...)
-}
-
-// ClearFuncs clears all "funcs" edges to the RoleFunc entity.
+// ClearFuncs clears all "funcs" edges to the Fun entity.
 func (ruo *RoleUpdateOne) ClearFuncs() *RoleUpdateOne {
 	ruo.mutation.ClearFuncs()
 	return ruo
 }
 
-// RemoveFuncIDs removes the "funcs" edge to RoleFunc entities by IDs.
+// RemoveFuncIDs removes the "funcs" edge to Fun entities by IDs.
 func (ruo *RoleUpdateOne) RemoveFuncIDs(ids ...int) *RoleUpdateOne {
 	ruo.mutation.RemoveFuncIDs(ids...)
 	return ruo
 }
 
-// RemoveFuncs removes "funcs" edges to RoleFunc entities.
-func (ruo *RoleUpdateOne) RemoveFuncs(r ...*RoleFunc) *RoleUpdateOne {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+// RemoveFuncs removes "funcs" edges to Fun entities.
+func (ruo *RoleUpdateOne) RemoveFuncs(f ...*Fun) *RoleUpdateOne {
+	ids := make([]int, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
 	}
 	return ruo.RemoveFuncIDs(ids...)
 }
@@ -645,10 +604,10 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) 
 	}
 	if ruo.mutation.ApplicationCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   role.ApplicationTable,
-			Columns: role.ApplicationPrimaryKey,
+			Columns: []string{role.ApplicationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -656,34 +615,15 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) 
 					Column: application.FieldID,
 				},
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ruo.mutation.RemovedApplicationIDs(); len(nodes) > 0 && !ruo.mutation.ApplicationCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   role.ApplicationTable,
-			Columns: role.ApplicationPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: application.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := ruo.mutation.ApplicationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   role.ApplicationTable,
-			Columns: role.ApplicationPrimaryKey,
+			Columns: []string{role.ApplicationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -707,7 +647,7 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) 
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: rolefunc.FieldID,
+					Column: fun.FieldID,
 				},
 			},
 		}
@@ -723,7 +663,7 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) 
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: rolefunc.FieldID,
+					Column: fun.FieldID,
 				},
 			},
 		}
@@ -742,7 +682,7 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) 
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: rolefunc.FieldID,
+					Column: fun.FieldID,
 				},
 			},
 		}

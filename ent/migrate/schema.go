@@ -48,6 +48,16 @@ var (
 		Columns:    ApplicationsColumns,
 		PrimaryKey: []*schema.Column{ApplicationsColumns[0]},
 	}
+	// FunsColumns holds the columns for the "funs" table.
+	FunsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+	}
+	// FunsTable holds the schema information for the "funs" table.
+	FunsTable = &schema.Table{
+		Name:       "funs",
+		Columns:    FunsColumns,
+		PrimaryKey: []*schema.Column{FunsColumns[0]},
+	}
 	// RolesColumns holds the columns for the "roles" table.
 	RolesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -58,28 +68,21 @@ var (
 		{Name: "deleted", Type: field.TypeBool, Default: false},
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "desc", Type: field.TypeString},
+		{Name: "application_roles", Type: field.TypeInt, Nullable: true},
 	}
 	// RolesTable holds the schema information for the "roles" table.
 	RolesTable = &schema.Table{
 		Name:       "roles",
 		Columns:    RolesColumns,
 		PrimaryKey: []*schema.Column{RolesColumns[0]},
-	}
-	// RoleFuncsColumns holds the columns for the "role_funcs" table.
-	RoleFuncsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "create_time", Type: field.TypeTime},
-		{Name: "update_time", Type: field.TypeTime},
-		{Name: "create_by", Type: field.TypeString},
-		{Name: "update_by", Type: field.TypeString},
-		{Name: "deleted", Type: field.TypeBool, Default: false},
-		{Name: "url_pattern", Type: field.TypeString},
-	}
-	// RoleFuncsTable holds the schema information for the "role_funcs" table.
-	RoleFuncsTable = &schema.Table{
-		Name:       "role_funcs",
-		Columns:    RoleFuncsColumns,
-		PrimaryKey: []*schema.Column{RoleFuncsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "roles_applications_roles",
+				Columns:    []*schema.Column{RolesColumns[8]},
+				RefColumns: []*schema.Column{ApplicationsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// SubAccountsColumns holds the columns for the "sub_accounts" table.
 	SubAccountsColumns = []*schema.Column{
@@ -91,67 +94,26 @@ var (
 		{Name: "deleted", Type: field.TypeBool, Default: false},
 		{Name: "acct_type", Type: field.TypeInt},
 		{Name: "sub_acct", Type: field.TypeString},
+		{Name: "account_sub_accounts", Type: field.TypeInt, Nullable: true},
 	}
 	// SubAccountsTable holds the schema information for the "sub_accounts" table.
 	SubAccountsTable = &schema.Table{
 		Name:       "sub_accounts",
 		Columns:    SubAccountsColumns,
 		PrimaryKey: []*schema.Column{SubAccountsColumns[0]},
-	}
-	// AccountSubAccountsColumns holds the columns for the "account_subAccounts" table.
-	AccountSubAccountsColumns = []*schema.Column{
-		{Name: "account_id", Type: field.TypeInt},
-		{Name: "sub_account_id", Type: field.TypeInt},
-	}
-	// AccountSubAccountsTable holds the schema information for the "account_subAccounts" table.
-	AccountSubAccountsTable = &schema.Table{
-		Name:       "account_subAccounts",
-		Columns:    AccountSubAccountsColumns,
-		PrimaryKey: []*schema.Column{AccountSubAccountsColumns[0], AccountSubAccountsColumns[1]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "account_subAccounts_account_id",
-				Columns:    []*schema.Column{AccountSubAccountsColumns[0]},
+				Symbol:     "sub_accounts_accounts_subAccounts",
+				Columns:    []*schema.Column{SubAccountsColumns[8]},
 				RefColumns: []*schema.Column{AccountsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "account_subAccounts_sub_account_id",
-				Columns:    []*schema.Column{AccountSubAccountsColumns[1]},
-				RefColumns: []*schema.Column{SubAccountsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
-	// ApplicationRolesColumns holds the columns for the "application_roles" table.
-	ApplicationRolesColumns = []*schema.Column{
-		{Name: "application_id", Type: field.TypeInt},
-		{Name: "role_id", Type: field.TypeInt},
-	}
-	// ApplicationRolesTable holds the schema information for the "application_roles" table.
-	ApplicationRolesTable = &schema.Table{
-		Name:       "application_roles",
-		Columns:    ApplicationRolesColumns,
-		PrimaryKey: []*schema.Column{ApplicationRolesColumns[0], ApplicationRolesColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "application_roles_application_id",
-				Columns:    []*schema.Column{ApplicationRolesColumns[0]},
-				RefColumns: []*schema.Column{ApplicationsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "application_roles_role_id",
-				Columns:    []*schema.Column{ApplicationRolesColumns[1]},
-				RefColumns: []*schema.Column{RolesColumns[0]},
-				OnDelete:   schema.Cascade,
+				OnDelete:   schema.SetNull,
 			},
 		},
 	}
 	// RoleFuncsColumns holds the columns for the "role_funcs" table.
 	RoleFuncsColumns = []*schema.Column{
 		{Name: "role_id", Type: field.TypeInt},
-		{Name: "role_func_id", Type: field.TypeInt},
+		{Name: "fun_id", Type: field.TypeInt},
 	}
 	// RoleFuncsTable holds the schema information for the "role_funcs" table.
 	RoleFuncsTable = &schema.Table{
@@ -166,9 +128,9 @@ var (
 				OnDelete:   schema.Cascade,
 			},
 			{
-				Symbol:     "role_funcs_role_func_id",
+				Symbol:     "role_funcs_fun_id",
 				Columns:    []*schema.Column{RoleFuncsColumns[1]},
-				RefColumns: []*schema.Column{RoleFuncsColumns[0]},
+				RefColumns: []*schema.Column{FunsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 		},
@@ -177,20 +139,16 @@ var (
 	Tables = []*schema.Table{
 		AccountsTable,
 		ApplicationsTable,
+		FunsTable,
 		RolesTable,
-		RoleFuncsTable,
 		SubAccountsTable,
-		AccountSubAccountsTable,
-		ApplicationRolesTable,
 		RoleFuncsTable,
 	}
 )
 
 func init() {
-	AccountSubAccountsTable.ForeignKeys[0].RefTable = AccountsTable
-	AccountSubAccountsTable.ForeignKeys[1].RefTable = SubAccountsTable
-	ApplicationRolesTable.ForeignKeys[0].RefTable = ApplicationsTable
-	ApplicationRolesTable.ForeignKeys[1].RefTable = RolesTable
+	RolesTable.ForeignKeys[0].RefTable = ApplicationsTable
+	SubAccountsTable.ForeignKeys[0].RefTable = AccountsTable
 	RoleFuncsTable.ForeignKeys[0].RefTable = RolesTable
-	RoleFuncsTable.ForeignKeys[1].RefTable = RoleFuncsTable
+	RoleFuncsTable.ForeignKeys[1].RefTable = FunsTable
 }

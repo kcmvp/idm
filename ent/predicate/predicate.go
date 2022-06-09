@@ -12,11 +12,11 @@ type Account func(*sql.Selector)
 // Application is the predicate function for application builders.
 type Application func(*sql.Selector)
 
+// Fun is the predicate function for fun builders.
+type Fun func(*sql.Selector)
+
 // Role is the predicate function for role builders.
 type Role func(*sql.Selector)
-
-// RoleFunc is the predicate function for rolefunc builders.
-type RoleFunc func(*sql.Selector)
 
 // SubAccount is the predicate function for subaccount builders.
 type SubAccount func(*sql.Selector)

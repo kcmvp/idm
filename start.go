@@ -1,30 +1,43 @@
-package iam
+package main
 
 import (
-	"context"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/kcmvp/idm/ent"
-	"log"
-	"net/http"
+	"github.com/kcmvp/idm/infra"
 )
 
 func main() {
-	client, err := ent.Open("mysql", "<user>:<pass>@tcp(<host>:<port>)/<database>?parseTime=True")
-	if err != nil {
-		log.Fatalf("failed opening connection to sqlite: %v", err)
-	}
-	defer client.Close()
-	// Run the auto migration tool.
-	if err := client.Schema.Create(context.Background()); err != nil {
-		log.Fatalf("failed creating schema resources: %v", err)
+	infra.SetupClient()
+	engine := setupRouter()
+	engine.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+}
+
+func setupRouter() *gin.Engine {
+
+	router := gin.Default()
+
+	accountGroup := router.Group("/account")
+	{
+		accountGroup.GET("")
+
 	}
 
-	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-	})
-	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	applicationGroup := router.Group("/account")
+	{
+		applicationGroup.GET("")
+	}
+
+	roleGroup := router.Group("/account")
+	{
+		roleGroup.GET("")
+
+	}
+
+	funcGroup := router.Group("/account")
+	{
+		funcGroup.GET("")
+
+	}
+
+	return router
 }

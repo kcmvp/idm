@@ -758,7 +758,7 @@ func HasApplication() predicate.Role {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(ApplicationTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, ApplicationTable, ApplicationPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, ApplicationTable, ApplicationColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -770,7 +770,7 @@ func HasApplicationWith(preds ...predicate.Application) predicate.Role {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(ApplicationInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, ApplicationTable, ApplicationPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, ApplicationTable, ApplicationColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
@@ -793,7 +793,7 @@ func HasFuncs() predicate.Role {
 }
 
 // HasFuncsWith applies the HasEdge predicate on the "funcs" edge with a given conditions (other predicates).
-func HasFuncsWith(preds ...predicate.RoleFunc) predicate.Role {
+func HasFuncsWith(preds ...predicate.Fun) predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),

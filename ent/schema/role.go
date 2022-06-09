@@ -23,8 +23,8 @@ func (Role) Fields() []ent.Field {
 // Edges of the Role.
 func (Role) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("application", Application.Type).Ref("roles"),
-		edge.To("funcs", RoleFunc.Type),
+		edge.From("application", Application.Type).Ref("roles").Unique(),
+		edge.To("funcs", Fun.Type),
 	}
 }
 

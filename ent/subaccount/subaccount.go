@@ -25,15 +25,17 @@ const (
 	FieldAcctType = "acct_type"
 	// FieldSubAcct holds the string denoting the sub_acct field in the database.
 	FieldSubAcct = "sub_acct"
-	// EdgeAccoun holds the string denoting the accoun edge name in mutations.
-	EdgeAccoun = "accoun"
+	// EdgeAccount holds the string denoting the account edge name in mutations.
+	EdgeAccount = "account"
 	// Table holds the table name of the subaccount in the database.
 	Table = "sub_accounts"
-	// AccounTable is the table that holds the accoun relation/edge. The primary key declared below.
-	AccounTable = "account_subAccounts"
-	// AccounInverseTable is the table name for the Account entity.
+	// AccountTable is the table that holds the account relation/edge.
+	AccountTable = "sub_accounts"
+	// AccountInverseTable is the table name for the Account entity.
 	// It exists in this package in order to avoid circular dependency with the "account" package.
-	AccounInverseTable = "accounts"
+	AccountInverseTable = "accounts"
+	// AccountColumn is the table column denoting the account relation/edge.
+	AccountColumn = "account_sub_accounts"
 )
 
 // Columns holds all SQL columns for subaccount fields.
@@ -48,16 +50,21 @@ var Columns = []string{
 	FieldSubAcct,
 }
 
-var (
-	// AccounPrimaryKey and AccounColumn2 are the table columns denoting the
-	// primary key for the accoun relation (M2M).
-	AccounPrimaryKey = []string{"account_id", "sub_account_id"}
-)
+// ForeignKeys holds the SQL foreign-keys that are owned by the "sub_accounts"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"account_sub_accounts",
+}
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}

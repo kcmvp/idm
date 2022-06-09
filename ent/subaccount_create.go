@@ -88,19 +88,23 @@ func (sac *SubAccountCreate) SetSubAcct(s string) *SubAccountCreate {
 	return sac
 }
 
-// AddAccounIDs adds the "accoun" edge to the Account entity by IDs.
-func (sac *SubAccountCreate) AddAccounIDs(ids ...int) *SubAccountCreate {
-	sac.mutation.AddAccounIDs(ids...)
+// SetAccountID sets the "account" edge to the Account entity by ID.
+func (sac *SubAccountCreate) SetAccountID(id int) *SubAccountCreate {
+	sac.mutation.SetAccountID(id)
 	return sac
 }
 
-// AddAccoun adds the "accoun" edges to the Account entity.
-func (sac *SubAccountCreate) AddAccoun(a ...*Account) *SubAccountCreate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+// SetNillableAccountID sets the "account" edge to the Account entity by ID if the given value is not nil.
+func (sac *SubAccountCreate) SetNillableAccountID(id *int) *SubAccountCreate {
+	if id != nil {
+		sac = sac.SetAccountID(*id)
 	}
-	return sac.AddAccounIDs(ids...)
+	return sac
+}
+
+// SetAccount sets the "account" edge to the Account entity.
+func (sac *SubAccountCreate) SetAccount(a *Account) *SubAccountCreate {
+	return sac.SetAccountID(a.ID)
 }
 
 // Mutation returns the SubAccountMutation object of the builder.
@@ -294,12 +298,12 @@ func (sac *SubAccountCreate) createSpec() (*SubAccount, *sqlgraph.CreateSpec) {
 		})
 		_node.SubAcct = value
 	}
-	if nodes := sac.mutation.AccounIDs(); len(nodes) > 0 {
+	if nodes := sac.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   subaccount.AccounTable,
-			Columns: subaccount.AccounPrimaryKey,
+			Table:   subaccount.AccountTable,
+			Columns: []string{subaccount.AccountColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -311,6 +315,7 @@ func (sac *SubAccountCreate) createSpec() (*SubAccount, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.account_sub_accounts = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

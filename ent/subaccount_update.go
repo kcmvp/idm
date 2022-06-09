@@ -75,19 +75,23 @@ func (sau *SubAccountUpdate) SetSubAcct(s string) *SubAccountUpdate {
 	return sau
 }
 
-// AddAccounIDs adds the "accoun" edge to the Account entity by IDs.
-func (sau *SubAccountUpdate) AddAccounIDs(ids ...int) *SubAccountUpdate {
-	sau.mutation.AddAccounIDs(ids...)
+// SetAccountID sets the "account" edge to the Account entity by ID.
+func (sau *SubAccountUpdate) SetAccountID(id int) *SubAccountUpdate {
+	sau.mutation.SetAccountID(id)
 	return sau
 }
 
-// AddAccoun adds the "accoun" edges to the Account entity.
-func (sau *SubAccountUpdate) AddAccoun(a ...*Account) *SubAccountUpdate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+// SetNillableAccountID sets the "account" edge to the Account entity by ID if the given value is not nil.
+func (sau *SubAccountUpdate) SetNillableAccountID(id *int) *SubAccountUpdate {
+	if id != nil {
+		sau = sau.SetAccountID(*id)
 	}
-	return sau.AddAccounIDs(ids...)
+	return sau
+}
+
+// SetAccount sets the "account" edge to the Account entity.
+func (sau *SubAccountUpdate) SetAccount(a *Account) *SubAccountUpdate {
+	return sau.SetAccountID(a.ID)
 }
 
 // Mutation returns the SubAccountMutation object of the builder.
@@ -95,25 +99,10 @@ func (sau *SubAccountUpdate) Mutation() *SubAccountMutation {
 	return sau.mutation
 }
 
-// ClearAccoun clears all "accoun" edges to the Account entity.
-func (sau *SubAccountUpdate) ClearAccoun() *SubAccountUpdate {
-	sau.mutation.ClearAccoun()
+// ClearAccount clears the "account" edge to the Account entity.
+func (sau *SubAccountUpdate) ClearAccount() *SubAccountUpdate {
+	sau.mutation.ClearAccount()
 	return sau
-}
-
-// RemoveAccounIDs removes the "accoun" edge to Account entities by IDs.
-func (sau *SubAccountUpdate) RemoveAccounIDs(ids ...int) *SubAccountUpdate {
-	sau.mutation.RemoveAccounIDs(ids...)
-	return sau
-}
-
-// RemoveAccoun removes "accoun" edges to Account entities.
-func (sau *SubAccountUpdate) RemoveAccoun(a ...*Account) *SubAccountUpdate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return sau.RemoveAccounIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -239,12 +228,12 @@ func (sau *SubAccountUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: subaccount.FieldSubAcct,
 		})
 	}
-	if sau.mutation.AccounCleared() {
+	if sau.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   subaccount.AccounTable,
-			Columns: subaccount.AccounPrimaryKey,
+			Table:   subaccount.AccountTable,
+			Columns: []string{subaccount.AccountColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -255,31 +244,12 @@ func (sau *SubAccountUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := sau.mutation.RemovedAccounIDs(); len(nodes) > 0 && !sau.mutation.AccounCleared() {
+	if nodes := sau.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   subaccount.AccounTable,
-			Columns: subaccount.AccounPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: account.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := sau.mutation.AccounIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   subaccount.AccounTable,
-			Columns: subaccount.AccounPrimaryKey,
+			Table:   subaccount.AccountTable,
+			Columns: []string{subaccount.AccountColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -357,19 +327,23 @@ func (sauo *SubAccountUpdateOne) SetSubAcct(s string) *SubAccountUpdateOne {
 	return sauo
 }
 
-// AddAccounIDs adds the "accoun" edge to the Account entity by IDs.
-func (sauo *SubAccountUpdateOne) AddAccounIDs(ids ...int) *SubAccountUpdateOne {
-	sauo.mutation.AddAccounIDs(ids...)
+// SetAccountID sets the "account" edge to the Account entity by ID.
+func (sauo *SubAccountUpdateOne) SetAccountID(id int) *SubAccountUpdateOne {
+	sauo.mutation.SetAccountID(id)
 	return sauo
 }
 
-// AddAccoun adds the "accoun" edges to the Account entity.
-func (sauo *SubAccountUpdateOne) AddAccoun(a ...*Account) *SubAccountUpdateOne {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+// SetNillableAccountID sets the "account" edge to the Account entity by ID if the given value is not nil.
+func (sauo *SubAccountUpdateOne) SetNillableAccountID(id *int) *SubAccountUpdateOne {
+	if id != nil {
+		sauo = sauo.SetAccountID(*id)
 	}
-	return sauo.AddAccounIDs(ids...)
+	return sauo
+}
+
+// SetAccount sets the "account" edge to the Account entity.
+func (sauo *SubAccountUpdateOne) SetAccount(a *Account) *SubAccountUpdateOne {
+	return sauo.SetAccountID(a.ID)
 }
 
 // Mutation returns the SubAccountMutation object of the builder.
@@ -377,25 +351,10 @@ func (sauo *SubAccountUpdateOne) Mutation() *SubAccountMutation {
 	return sauo.mutation
 }
 
-// ClearAccoun clears all "accoun" edges to the Account entity.
-func (sauo *SubAccountUpdateOne) ClearAccoun() *SubAccountUpdateOne {
-	sauo.mutation.ClearAccoun()
+// ClearAccount clears the "account" edge to the Account entity.
+func (sauo *SubAccountUpdateOne) ClearAccount() *SubAccountUpdateOne {
+	sauo.mutation.ClearAccount()
 	return sauo
-}
-
-// RemoveAccounIDs removes the "accoun" edge to Account entities by IDs.
-func (sauo *SubAccountUpdateOne) RemoveAccounIDs(ids ...int) *SubAccountUpdateOne {
-	sauo.mutation.RemoveAccounIDs(ids...)
-	return sauo
-}
-
-// RemoveAccoun removes "accoun" edges to Account entities.
-func (sauo *SubAccountUpdateOne) RemoveAccoun(a ...*Account) *SubAccountUpdateOne {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return sauo.RemoveAccounIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -545,12 +504,12 @@ func (sauo *SubAccountUpdateOne) sqlSave(ctx context.Context) (_node *SubAccount
 			Column: subaccount.FieldSubAcct,
 		})
 	}
-	if sauo.mutation.AccounCleared() {
+	if sauo.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   subaccount.AccounTable,
-			Columns: subaccount.AccounPrimaryKey,
+			Table:   subaccount.AccountTable,
+			Columns: []string{subaccount.AccountColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -561,31 +520,12 @@ func (sauo *SubAccountUpdateOne) sqlSave(ctx context.Context) (_node *SubAccount
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := sauo.mutation.RemovedAccounIDs(); len(nodes) > 0 && !sauo.mutation.AccounCleared() {
+	if nodes := sauo.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   subaccount.AccounTable,
-			Columns: subaccount.AccounPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: account.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := sauo.mutation.AccounIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   subaccount.AccounTable,
-			Columns: subaccount.AccounPrimaryKey,
+			Table:   subaccount.AccountTable,
+			Columns: []string{subaccount.AccountColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

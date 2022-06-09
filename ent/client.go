@@ -11,8 +11,8 @@ import (
 
 	"github.com/kcmvp/idm/ent/account"
 	"github.com/kcmvp/idm/ent/application"
+	"github.com/kcmvp/idm/ent/fun"
 	"github.com/kcmvp/idm/ent/role"
-	"github.com/kcmvp/idm/ent/rolefunc"
 	"github.com/kcmvp/idm/ent/subaccount"
 
 	"entgo.io/ent/dialect"
@@ -29,10 +29,10 @@ type Client struct {
 	Account *AccountClient
 	// Application is the client for interacting with the Application builders.
 	Application *ApplicationClient
+	// Fun is the client for interacting with the Fun builders.
+	Fun *FunClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
-	// RoleFunc is the client for interacting with the RoleFunc builders.
-	RoleFunc *RoleFuncClient
 	// SubAccount is the client for interacting with the SubAccount builders.
 	SubAccount *SubAccountClient
 }
@@ -50,8 +50,8 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Account = NewAccountClient(c.config)
 	c.Application = NewApplicationClient(c.config)
+	c.Fun = NewFunClient(c.config)
 	c.Role = NewRoleClient(c.config)
-	c.RoleFunc = NewRoleFuncClient(c.config)
 	c.SubAccount = NewSubAccountClient(c.config)
 }
 
@@ -88,8 +88,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		config:      cfg,
 		Account:     NewAccountClient(cfg),
 		Application: NewApplicationClient(cfg),
+		Fun:         NewFunClient(cfg),
 		Role:        NewRoleClient(cfg),
-		RoleFunc:    NewRoleFuncClient(cfg),
 		SubAccount:  NewSubAccountClient(cfg),
 	}, nil
 }
@@ -112,8 +112,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		config:      cfg,
 		Account:     NewAccountClient(cfg),
 		Application: NewApplicationClient(cfg),
+		Fun:         NewFunClient(cfg),
 		Role:        NewRoleClient(cfg),
-		RoleFunc:    NewRoleFuncClient(cfg),
 		SubAccount:  NewSubAccountClient(cfg),
 	}, nil
 }
@@ -146,8 +146,8 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	c.Account.Use(hooks...)
 	c.Application.Use(hooks...)
+	c.Fun.Use(hooks...)
 	c.Role.Use(hooks...)
-	c.RoleFunc.Use(hooks...)
 	c.SubAccount.Use(hooks...)
 }
 
@@ -244,7 +244,7 @@ func (c *AccountClient) QuerySubAccounts(a *Account) *SubAccountQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(account.Table, account.FieldID, id),
 			sqlgraph.To(subaccount.Table, subaccount.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, account.SubAccountsTable, account.SubAccountsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.SubAccountsTable, account.SubAccountsColumn),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil
@@ -350,7 +350,7 @@ func (c *ApplicationClient) QueryRoles(a *Application) *RoleQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(application.Table, application.FieldID, id),
 			sqlgraph.To(role.Table, role.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, application.RolesTable, application.RolesPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, application.RolesTable, application.RolesColumn),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil
@@ -361,6 +361,112 @@ func (c *ApplicationClient) QueryRoles(a *Application) *RoleQuery {
 // Hooks returns the client hooks.
 func (c *ApplicationClient) Hooks() []Hook {
 	return c.hooks.Application
+}
+
+// FunClient is a client for the Fun schema.
+type FunClient struct {
+	config
+}
+
+// NewFunClient returns a client for the Fun from the given config.
+func NewFunClient(c config) *FunClient {
+	return &FunClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `fun.Hooks(f(g(h())))`.
+func (c *FunClient) Use(hooks ...Hook) {
+	c.hooks.Fun = append(c.hooks.Fun, hooks...)
+}
+
+// Create returns a create builder for Fun.
+func (c *FunClient) Create() *FunCreate {
+	mutation := newFunMutation(c.config, OpCreate)
+	return &FunCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Fun entities.
+func (c *FunClient) CreateBulk(builders ...*FunCreate) *FunCreateBulk {
+	return &FunCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Fun.
+func (c *FunClient) Update() *FunUpdate {
+	mutation := newFunMutation(c.config, OpUpdate)
+	return &FunUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *FunClient) UpdateOne(f *Fun) *FunUpdateOne {
+	mutation := newFunMutation(c.config, OpUpdateOne, withFun(f))
+	return &FunUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *FunClient) UpdateOneID(id int) *FunUpdateOne {
+	mutation := newFunMutation(c.config, OpUpdateOne, withFunID(id))
+	return &FunUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Fun.
+func (c *FunClient) Delete() *FunDelete {
+	mutation := newFunMutation(c.config, OpDelete)
+	return &FunDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *FunClient) DeleteOne(f *Fun) *FunDeleteOne {
+	return c.DeleteOneID(f.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *FunClient) DeleteOneID(id int) *FunDeleteOne {
+	builder := c.Delete().Where(fun.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &FunDeleteOne{builder}
+}
+
+// Query returns a query builder for Fun.
+func (c *FunClient) Query() *FunQuery {
+	return &FunQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Fun entity by its id.
+func (c *FunClient) Get(ctx context.Context, id int) (*Fun, error) {
+	return c.Query().Where(fun.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *FunClient) GetX(ctx context.Context, id int) *Fun {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryRole queries the role edge of a Fun.
+func (c *FunClient) QueryRole(f *Fun) *RoleQuery {
+	query := &RoleQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := f.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(fun.Table, fun.FieldID, id),
+			sqlgraph.To(role.Table, role.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, fun.RoleTable, fun.RolePrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(f.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *FunClient) Hooks() []Hook {
+	return c.hooks.Fun
 }
 
 // RoleClient is a client for the Role schema.
@@ -456,7 +562,7 @@ func (c *RoleClient) QueryApplication(r *Role) *ApplicationQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(role.Table, role.FieldID, id),
 			sqlgraph.To(application.Table, application.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, role.ApplicationTable, role.ApplicationPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, role.ApplicationTable, role.ApplicationColumn),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil
@@ -465,13 +571,13 @@ func (c *RoleClient) QueryApplication(r *Role) *ApplicationQuery {
 }
 
 // QueryFuncs queries the funcs edge of a Role.
-func (c *RoleClient) QueryFuncs(r *Role) *RoleFuncQuery {
-	query := &RoleFuncQuery{config: c.config}
+func (c *RoleClient) QueryFuncs(r *Role) *FunQuery {
+	query := &FunQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := r.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(role.Table, role.FieldID, id),
-			sqlgraph.To(rolefunc.Table, rolefunc.FieldID),
+			sqlgraph.To(fun.Table, fun.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, role.FuncsTable, role.FuncsPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
@@ -483,112 +589,6 @@ func (c *RoleClient) QueryFuncs(r *Role) *RoleFuncQuery {
 // Hooks returns the client hooks.
 func (c *RoleClient) Hooks() []Hook {
 	return c.hooks.Role
-}
-
-// RoleFuncClient is a client for the RoleFunc schema.
-type RoleFuncClient struct {
-	config
-}
-
-// NewRoleFuncClient returns a client for the RoleFunc from the given config.
-func NewRoleFuncClient(c config) *RoleFuncClient {
-	return &RoleFuncClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `rolefunc.Hooks(f(g(h())))`.
-func (c *RoleFuncClient) Use(hooks ...Hook) {
-	c.hooks.RoleFunc = append(c.hooks.RoleFunc, hooks...)
-}
-
-// Create returns a create builder for RoleFunc.
-func (c *RoleFuncClient) Create() *RoleFuncCreate {
-	mutation := newRoleFuncMutation(c.config, OpCreate)
-	return &RoleFuncCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of RoleFunc entities.
-func (c *RoleFuncClient) CreateBulk(builders ...*RoleFuncCreate) *RoleFuncCreateBulk {
-	return &RoleFuncCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for RoleFunc.
-func (c *RoleFuncClient) Update() *RoleFuncUpdate {
-	mutation := newRoleFuncMutation(c.config, OpUpdate)
-	return &RoleFuncUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *RoleFuncClient) UpdateOne(rf *RoleFunc) *RoleFuncUpdateOne {
-	mutation := newRoleFuncMutation(c.config, OpUpdateOne, withRoleFunc(rf))
-	return &RoleFuncUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *RoleFuncClient) UpdateOneID(id int) *RoleFuncUpdateOne {
-	mutation := newRoleFuncMutation(c.config, OpUpdateOne, withRoleFuncID(id))
-	return &RoleFuncUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for RoleFunc.
-func (c *RoleFuncClient) Delete() *RoleFuncDelete {
-	mutation := newRoleFuncMutation(c.config, OpDelete)
-	return &RoleFuncDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a delete builder for the given entity.
-func (c *RoleFuncClient) DeleteOne(rf *RoleFunc) *RoleFuncDeleteOne {
-	return c.DeleteOneID(rf.ID)
-}
-
-// DeleteOneID returns a delete builder for the given id.
-func (c *RoleFuncClient) DeleteOneID(id int) *RoleFuncDeleteOne {
-	builder := c.Delete().Where(rolefunc.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &RoleFuncDeleteOne{builder}
-}
-
-// Query returns a query builder for RoleFunc.
-func (c *RoleFuncClient) Query() *RoleFuncQuery {
-	return &RoleFuncQuery{
-		config: c.config,
-	}
-}
-
-// Get returns a RoleFunc entity by its id.
-func (c *RoleFuncClient) Get(ctx context.Context, id int) (*RoleFunc, error) {
-	return c.Query().Where(rolefunc.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *RoleFuncClient) GetX(ctx context.Context, id int) *RoleFunc {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryRole queries the role edge of a RoleFunc.
-func (c *RoleFuncClient) QueryRole(rf *RoleFunc) *RoleQuery {
-	query := &RoleQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := rf.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(rolefunc.Table, rolefunc.FieldID, id),
-			sqlgraph.To(role.Table, role.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, rolefunc.RoleTable, rolefunc.RolePrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(rf.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *RoleFuncClient) Hooks() []Hook {
-	return c.hooks.RoleFunc
 }
 
 // SubAccountClient is a client for the SubAccount schema.
@@ -676,15 +676,15 @@ func (c *SubAccountClient) GetX(ctx context.Context, id int) *SubAccount {
 	return obj
 }
 
-// QueryAccoun queries the accoun edge of a SubAccount.
-func (c *SubAccountClient) QueryAccoun(sa *SubAccount) *AccountQuery {
+// QueryAccount queries the account edge of a SubAccount.
+func (c *SubAccountClient) QueryAccount(sa *SubAccount) *AccountQuery {
 	query := &AccountQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := sa.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(subaccount.Table, subaccount.FieldID, id),
 			sqlgraph.To(account.Table, account.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, subaccount.AccounTable, subaccount.AccounPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, subaccount.AccountTable, subaccount.AccountColumn),
 		)
 		fromV = sqlgraph.Neighbors(sa.driver.Dialect(), step)
 		return fromV, nil

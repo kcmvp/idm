@@ -16,10 +16,10 @@ type Tx struct {
 	Account *AccountClient
 	// Application is the client for interacting with the Application builders.
 	Application *ApplicationClient
+	// Fun is the client for interacting with the Fun builders.
+	Fun *FunClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
-	// RoleFunc is the client for interacting with the RoleFunc builders.
-	RoleFunc *RoleFuncClient
 	// SubAccount is the client for interacting with the SubAccount builders.
 	SubAccount *SubAccountClient
 
@@ -159,8 +159,8 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.Account = NewAccountClient(tx.config)
 	tx.Application = NewApplicationClient(tx.config)
+	tx.Fun = NewFunClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)
-	tx.RoleFunc = NewRoleFuncClient(tx.config)
 	tx.SubAccount = NewSubAccountClient(tx.config)
 }
 

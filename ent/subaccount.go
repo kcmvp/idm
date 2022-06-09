@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/kcmvp/idm/ent/account"
 	"github.com/kcmvp/idm/ent/schema"
 	"github.com/kcmvp/idm/ent/subaccount"
 )
@@ -33,25 +34,31 @@ type SubAccount struct {
 	SubAcct string `json:"sub_acct,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the SubAccountQuery when eager-loading is set.
-	Edges SubAccountEdges `json:"edges"`
+	Edges                SubAccountEdges `json:"edges"`
+	account_sub_accounts *int
 }
 
 // SubAccountEdges holds the relations/edges for other nodes in the graph.
 type SubAccountEdges struct {
-	// Accoun holds the value of the accoun edge.
-	Accoun []*Account `json:"accoun,omitempty"`
+	// Account holds the value of the account edge.
+	Account *Account `json:"account,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
-// AccounOrErr returns the Accoun value or an error if the edge
-// was not loaded in eager-loading.
-func (e SubAccountEdges) AccounOrErr() ([]*Account, error) {
+// AccountOrErr returns the Account value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e SubAccountEdges) AccountOrErr() (*Account, error) {
 	if e.loadedTypes[0] {
-		return e.Accoun, nil
+		if e.Account == nil {
+			// The edge account was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: account.Label}
+		}
+		return e.Account, nil
 	}
-	return nil, &NotLoadedError{edge: "accoun"}
+	return nil, &NotLoadedError{edge: "account"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -67,6 +74,8 @@ func (*SubAccount) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullString)
 		case subaccount.FieldCreateTime, subaccount.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
+		case subaccount.ForeignKeys[0]: // account_sub_accounts
+			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type SubAccount", columns[i])
 		}
@@ -130,14 +139,21 @@ func (sa *SubAccount) assignValues(columns []string, values []interface{}) error
 			} else if value.Valid {
 				sa.SubAcct = value.String
 			}
+		case subaccount.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field account_sub_accounts", value)
+			} else if value.Valid {
+				sa.account_sub_accounts = new(int)
+				*sa.account_sub_accounts = int(value.Int64)
+			}
 		}
 	}
 	return nil
 }
 
-// QueryAccoun queries the "accoun" edge of the SubAccount entity.
-func (sa *SubAccount) QueryAccoun() *AccountQuery {
-	return (&SubAccountClient{config: sa.config}).QueryAccoun(sa)
+// QueryAccount queries the "account" edge of the SubAccount entity.
+func (sa *SubAccount) QueryAccount() *AccountQuery {
+	return (&SubAccountClient{config: sa.config}).QueryAccount(sa)
 }
 
 // Update returns a builder for updating this SubAccount.

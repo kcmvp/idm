@@ -26,8 +26,8 @@ type config struct {
 type hooks struct {
 	Account     []ent.Hook
 	Application []ent.Hook
+	Fun         []ent.Hook
 	Role        []ent.Hook
-	RoleFunc    []ent.Hook
 	SubAccount  []ent.Hook
 }
 

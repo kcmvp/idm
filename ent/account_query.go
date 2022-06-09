@@ -78,7 +78,7 @@ func (aq *AccountQuery) QuerySubAccounts() *SubAccountQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(account.Table, account.FieldID, selector),
 			sqlgraph.To(subaccount.Table, subaccount.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, account.SubAccountsTable, account.SubAccountsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.SubAccountsTable, account.SubAccountsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
 		return fromU, nil
@@ -377,66 +377,30 @@ func (aq *AccountQuery) sqlAll(ctx context.Context) ([]*Account, error) {
 
 	if query := aq.withSubAccounts; query != nil {
 		fks := make([]driver.Value, 0, len(nodes))
-		ids := make(map[int]*Account, len(nodes))
-		for _, node := range nodes {
-			ids[node.ID] = node
-			fks = append(fks, node.ID)
-			node.Edges.SubAccounts = []*SubAccount{}
+		nodeids := make(map[int]*Account)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.SubAccounts = []*SubAccount{}
 		}
-		var (
-			edgeids []int
-			edges   = make(map[int][]*Account)
-		)
-		_spec := &sqlgraph.EdgeQuerySpec{
-			Edge: &sqlgraph.EdgeSpec{
-				Inverse: false,
-				Table:   account.SubAccountsTable,
-				Columns: account.SubAccountsPrimaryKey,
-			},
-			Predicate: func(s *sql.Selector) {
-				s.Where(sql.InValues(account.SubAccountsPrimaryKey[0], fks...))
-			},
-			ScanValues: func() [2]interface{} {
-				return [2]interface{}{new(sql.NullInt64), new(sql.NullInt64)}
-			},
-			Assign: func(out, in interface{}) error {
-				eout, ok := out.(*sql.NullInt64)
-				if !ok || eout == nil {
-					return fmt.Errorf("unexpected id value for edge-out")
-				}
-				ein, ok := in.(*sql.NullInt64)
-				if !ok || ein == nil {
-					return fmt.Errorf("unexpected id value for edge-in")
-				}
-				outValue := int(eout.Int64)
-				inValue := int(ein.Int64)
-				node, ok := ids[outValue]
-				if !ok {
-					return fmt.Errorf("unexpected node id in edges: %v", outValue)
-				}
-				if _, ok := edges[inValue]; !ok {
-					edgeids = append(edgeids, inValue)
-				}
-				edges[inValue] = append(edges[inValue], node)
-				return nil
-			},
-		}
-		if err := sqlgraph.QueryEdges(ctx, aq.driver, _spec); err != nil {
-			return nil, fmt.Errorf(`query edges "subAccounts": %w`, err)
-		}
-		query.Where(subaccount.IDIn(edgeids...))
+		query.withFKs = true
+		query.Where(predicate.SubAccount(func(s *sql.Selector) {
+			s.Where(sql.InValues(account.SubAccountsColumn, fks...))
+		}))
 		neighbors, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
 		for _, n := range neighbors {
-			nodes, ok := edges[n.ID]
+			fk := n.account_sub_accounts
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "account_sub_accounts" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected "subAccounts" node returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "account_sub_accounts" returned %v for node %v`, *fk, n.ID)
 			}
-			for i := range nodes {
-				nodes[i].Edges.SubAccounts = append(nodes[i].Edges.SubAccounts, n)
-			}
+			node.Edges.SubAccounts = append(node.Edges.SubAccounts, n)
 		}
 	}
 

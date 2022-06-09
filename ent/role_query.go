@@ -13,9 +13,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/kcmvp/idm/ent/application"
+	"github.com/kcmvp/idm/ent/fun"
 	"github.com/kcmvp/idm/ent/predicate"
 	"github.com/kcmvp/idm/ent/role"
-	"github.com/kcmvp/idm/ent/rolefunc"
 )
 
 // RoleQuery is the builder for querying Role entities.
@@ -29,7 +29,8 @@ type RoleQuery struct {
 	predicates []predicate.Role
 	// eager-loading edges.
 	withApplication *ApplicationQuery
-	withFuncs       *RoleFuncQuery
+	withFuncs       *FunQuery
+	withFKs         bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -80,7 +81,7 @@ func (rq *RoleQuery) QueryApplication() *ApplicationQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(role.Table, role.FieldID, selector),
 			sqlgraph.To(application.Table, application.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, role.ApplicationTable, role.ApplicationPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, role.ApplicationTable, role.ApplicationColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
 		return fromU, nil
@@ -89,8 +90,8 @@ func (rq *RoleQuery) QueryApplication() *ApplicationQuery {
 }
 
 // QueryFuncs chains the current query on the "funcs" edge.
-func (rq *RoleQuery) QueryFuncs() *RoleFuncQuery {
-	query := &RoleFuncQuery{config: rq.config}
+func (rq *RoleQuery) QueryFuncs() *FunQuery {
+	query := &FunQuery{config: rq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := rq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -101,7 +102,7 @@ func (rq *RoleQuery) QueryFuncs() *RoleFuncQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(role.Table, role.FieldID, selector),
-			sqlgraph.To(rolefunc.Table, rolefunc.FieldID),
+			sqlgraph.To(fun.Table, fun.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, role.FuncsTable, role.FuncsPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
@@ -313,8 +314,8 @@ func (rq *RoleQuery) WithApplication(opts ...func(*ApplicationQuery)) *RoleQuery
 
 // WithFuncs tells the query-builder to eager-load the nodes that are connected to
 // the "funcs" edge. The optional arguments are used to configure the query builder of the edge.
-func (rq *RoleQuery) WithFuncs(opts ...func(*RoleFuncQuery)) *RoleQuery {
-	query := &RoleFuncQuery{config: rq.config}
+func (rq *RoleQuery) WithFuncs(opts ...func(*FunQuery)) *RoleQuery {
+	query := &FunQuery{config: rq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
@@ -386,12 +387,19 @@ func (rq *RoleQuery) prepareQuery(ctx context.Context) error {
 func (rq *RoleQuery) sqlAll(ctx context.Context) ([]*Role, error) {
 	var (
 		nodes       = []*Role{}
+		withFKs     = rq.withFKs
 		_spec       = rq.querySpec()
 		loadedTypes = [2]bool{
 			rq.withApplication != nil,
 			rq.withFuncs != nil,
 		}
 	)
+	if rq.withApplication != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, role.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		node := &Role{config: rq.config}
 		nodes = append(nodes, node)
@@ -413,66 +421,30 @@ func (rq *RoleQuery) sqlAll(ctx context.Context) ([]*Role, error) {
 	}
 
 	if query := rq.withApplication; query != nil {
-		fks := make([]driver.Value, 0, len(nodes))
-		ids := make(map[int]*Role, len(nodes))
-		for _, node := range nodes {
-			ids[node.ID] = node
-			fks = append(fks, node.ID)
-			node.Edges.Application = []*Application{}
+		ids := make([]int, 0, len(nodes))
+		nodeids := make(map[int][]*Role)
+		for i := range nodes {
+			if nodes[i].application_roles == nil {
+				continue
+			}
+			fk := *nodes[i].application_roles
+			if _, ok := nodeids[fk]; !ok {
+				ids = append(ids, fk)
+			}
+			nodeids[fk] = append(nodeids[fk], nodes[i])
 		}
-		var (
-			edgeids []int
-			edges   = make(map[int][]*Role)
-		)
-		_spec := &sqlgraph.EdgeQuerySpec{
-			Edge: &sqlgraph.EdgeSpec{
-				Inverse: true,
-				Table:   role.ApplicationTable,
-				Columns: role.ApplicationPrimaryKey,
-			},
-			Predicate: func(s *sql.Selector) {
-				s.Where(sql.InValues(role.ApplicationPrimaryKey[1], fks...))
-			},
-			ScanValues: func() [2]interface{} {
-				return [2]interface{}{new(sql.NullInt64), new(sql.NullInt64)}
-			},
-			Assign: func(out, in interface{}) error {
-				eout, ok := out.(*sql.NullInt64)
-				if !ok || eout == nil {
-					return fmt.Errorf("unexpected id value for edge-out")
-				}
-				ein, ok := in.(*sql.NullInt64)
-				if !ok || ein == nil {
-					return fmt.Errorf("unexpected id value for edge-in")
-				}
-				outValue := int(eout.Int64)
-				inValue := int(ein.Int64)
-				node, ok := ids[outValue]
-				if !ok {
-					return fmt.Errorf("unexpected node id in edges: %v", outValue)
-				}
-				if _, ok := edges[inValue]; !ok {
-					edgeids = append(edgeids, inValue)
-				}
-				edges[inValue] = append(edges[inValue], node)
-				return nil
-			},
-		}
-		if err := sqlgraph.QueryEdges(ctx, rq.driver, _spec); err != nil {
-			return nil, fmt.Errorf(`query edges "application": %w`, err)
-		}
-		query.Where(application.IDIn(edgeids...))
+		query.Where(application.IDIn(ids...))
 		neighbors, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
 		for _, n := range neighbors {
-			nodes, ok := edges[n.ID]
+			nodes, ok := nodeids[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected "application" node returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "application_roles" returned %v`, n.ID)
 			}
 			for i := range nodes {
-				nodes[i].Edges.Application = append(nodes[i].Edges.Application, n)
+				nodes[i].Edges.Application = n
 			}
 		}
 	}
@@ -483,7 +455,7 @@ func (rq *RoleQuery) sqlAll(ctx context.Context) ([]*Role, error) {
 		for _, node := range nodes {
 			ids[node.ID] = node
 			fks = append(fks, node.ID)
-			node.Edges.Funcs = []*RoleFunc{}
+			node.Edges.Funcs = []*Fun{}
 		}
 		var (
 			edgeids []int
@@ -526,7 +498,7 @@ func (rq *RoleQuery) sqlAll(ctx context.Context) ([]*Role, error) {
 		if err := sqlgraph.QueryEdges(ctx, rq.driver, _spec); err != nil {
 			return nil, fmt.Errorf(`query edges "funcs": %w`, err)
 		}
-		query.Where(rolefunc.IDIn(edgeids...))
+		query.Where(fun.IDIn(edgeids...))
 		neighbors, err := query.All(ctx)
 		if err != nil {
 			return nil, err

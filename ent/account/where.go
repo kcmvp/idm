@@ -1272,7 +1272,7 @@ func HasSubAccounts() predicate.Account {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(SubAccountsTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, SubAccountsTable, SubAccountsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, SubAccountsTable, SubAccountsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -1284,7 +1284,7 @@ func HasSubAccountsWith(preds ...predicate.SubAccount) predicate.Account {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(SubAccountsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, SubAccountsTable, SubAccountsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, SubAccountsTable, SubAccountsColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

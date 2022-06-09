@@ -11,8 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/kcmvp/idm/ent/application"
+	"github.com/kcmvp/idm/ent/fun"
 	"github.com/kcmvp/idm/ent/role"
-	"github.com/kcmvp/idm/ent/rolefunc"
 )
 
 // RoleCreate is the builder for creating a Role entity.
@@ -88,32 +88,36 @@ func (rc *RoleCreate) SetDesc(s string) *RoleCreate {
 	return rc
 }
 
-// AddApplicationIDs adds the "application" edge to the Application entity by IDs.
-func (rc *RoleCreate) AddApplicationIDs(ids ...int) *RoleCreate {
-	rc.mutation.AddApplicationIDs(ids...)
+// SetApplicationID sets the "application" edge to the Application entity by ID.
+func (rc *RoleCreate) SetApplicationID(id int) *RoleCreate {
+	rc.mutation.SetApplicationID(id)
 	return rc
 }
 
-// AddApplication adds the "application" edges to the Application entity.
-func (rc *RoleCreate) AddApplication(a ...*Application) *RoleCreate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+// SetNillableApplicationID sets the "application" edge to the Application entity by ID if the given value is not nil.
+func (rc *RoleCreate) SetNillableApplicationID(id *int) *RoleCreate {
+	if id != nil {
+		rc = rc.SetApplicationID(*id)
 	}
-	return rc.AddApplicationIDs(ids...)
+	return rc
 }
 
-// AddFuncIDs adds the "funcs" edge to the RoleFunc entity by IDs.
+// SetApplication sets the "application" edge to the Application entity.
+func (rc *RoleCreate) SetApplication(a *Application) *RoleCreate {
+	return rc.SetApplicationID(a.ID)
+}
+
+// AddFuncIDs adds the "funcs" edge to the Fun entity by IDs.
 func (rc *RoleCreate) AddFuncIDs(ids ...int) *RoleCreate {
 	rc.mutation.AddFuncIDs(ids...)
 	return rc
 }
 
-// AddFuncs adds the "funcs" edges to the RoleFunc entity.
-func (rc *RoleCreate) AddFuncs(r ...*RoleFunc) *RoleCreate {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+// AddFuncs adds the "funcs" edges to the Fun entity.
+func (rc *RoleCreate) AddFuncs(f ...*Fun) *RoleCreate {
+	ids := make([]int, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
 	}
 	return rc.AddFuncIDs(ids...)
 }
@@ -311,10 +315,10 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 	}
 	if nodes := rc.mutation.ApplicationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   role.ApplicationTable,
-			Columns: role.ApplicationPrimaryKey,
+			Columns: []string{role.ApplicationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -326,6 +330,7 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.application_roles = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := rc.mutation.FuncsIDs(); len(nodes) > 0 {
@@ -338,7 +343,7 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: rolefunc.FieldID,
+					Column: fun.FieldID,
 				},
 			},
 		}

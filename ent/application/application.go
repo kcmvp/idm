@@ -29,11 +29,13 @@ const (
 	EdgeRoles = "roles"
 	// Table holds the table name of the application in the database.
 	Table = "applications"
-	// RolesTable is the table that holds the roles relation/edge. The primary key declared below.
-	RolesTable = "application_roles"
+	// RolesTable is the table that holds the roles relation/edge.
+	RolesTable = "roles"
 	// RolesInverseTable is the table name for the Role entity.
 	// It exists in this package in order to avoid circular dependency with the "role" package.
 	RolesInverseTable = "roles"
+	// RolesColumn is the table column denoting the roles relation/edge.
+	RolesColumn = "application_roles"
 )
 
 // Columns holds all SQL columns for application fields.
@@ -47,12 +49,6 @@ var Columns = []string{
 	FieldAppName,
 	FieldURL,
 }
-
-var (
-	// RolesPrimaryKey and RolesColumn2 are the table columns denoting the
-	// primary key for the roles relation (M2M).
-	RolesPrimaryKey = []string{"application_id", "role_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {

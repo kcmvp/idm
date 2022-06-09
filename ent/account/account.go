@@ -41,11 +41,13 @@ const (
 	EdgeSubAccounts = "subAccounts"
 	// Table holds the table name of the account in the database.
 	Table = "accounts"
-	// SubAccountsTable is the table that holds the subAccounts relation/edge. The primary key declared below.
-	SubAccountsTable = "account_subAccounts"
+	// SubAccountsTable is the table that holds the subAccounts relation/edge.
+	SubAccountsTable = "sub_accounts"
 	// SubAccountsInverseTable is the table name for the SubAccount entity.
 	// It exists in this package in order to avoid circular dependency with the "subaccount" package.
 	SubAccountsInverseTable = "sub_accounts"
+	// SubAccountsColumn is the table column denoting the subAccounts relation/edge.
+	SubAccountsColumn = "account_sub_accounts"
 )
 
 // Columns holds all SQL columns for account fields.
@@ -65,12 +67,6 @@ var Columns = []string{
 	FieldDisabled,
 	FieldSource,
 }
-
-var (
-	// SubAccountsPrimaryKey and SubAccountsColumn2 are the table columns denoting the
-	// primary key for the subAccounts relation (M2M).
-	SubAccountsPrimaryKey = []string{"account_id", "sub_account_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {

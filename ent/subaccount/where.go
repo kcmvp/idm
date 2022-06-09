@@ -725,25 +725,25 @@ func SubAcctContainsFold(v string) predicate.SubAccount {
 	})
 }
 
-// HasAccoun applies the HasEdge predicate on the "accoun" edge.
-func HasAccoun() predicate.SubAccount {
+// HasAccount applies the HasEdge predicate on the "account" edge.
+func HasAccount() predicate.SubAccount {
 	return predicate.SubAccount(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(AccounTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, AccounTable, AccounPrimaryKey...),
+			sqlgraph.To(AccountTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasAccounWith applies the HasEdge predicate on the "accoun" edge with a given conditions (other predicates).
-func HasAccounWith(preds ...predicate.Account) predicate.SubAccount {
+// HasAccountWith applies the HasEdge predicate on the "account" edge with a given conditions (other predicates).
+func HasAccountWith(preds ...predicate.Account) predicate.SubAccount {
 	return predicate.SubAccount(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(AccounInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, AccounTable, AccounPrimaryKey...),
+			sqlgraph.To(AccountInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

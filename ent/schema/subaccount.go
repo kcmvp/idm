@@ -31,7 +31,7 @@ func (SubAccount) Fields() []ent.Field {
 // Edges of the SubAccount.
 func (SubAccount) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("accoun", Account.Type).Ref("subAccounts"),
+		edge.From("account", Account.Type).Ref("subAccounts").Unique(),
 	}
 }
 

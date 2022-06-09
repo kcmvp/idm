@@ -10,8 +10,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/kcmvp/idm/ent/account"
 	"github.com/kcmvp/idm/ent/application"
+	"github.com/kcmvp/idm/ent/fun"
 	"github.com/kcmvp/idm/ent/role"
-	"github.com/kcmvp/idm/ent/rolefunc"
 	"github.com/kcmvp/idm/ent/subaccount"
 )
 
@@ -35,8 +35,8 @@ func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
 		account.Table:     account.ValidColumn,
 		application.Table: application.ValidColumn,
+		fun.Table:         fun.ValidColumn,
 		role.Table:        role.ValidColumn,
-		rolefunc.Table:    rolefunc.ValidColumn,
 		subaccount.Table:  subaccount.ValidColumn,
 	}
 	check, ok := checks[table]

@@ -8,7 +8,6 @@ import (
 	"github.com/kcmvp/idm/ent/account"
 	"github.com/kcmvp/idm/ent/application"
 	"github.com/kcmvp/idm/ent/role"
-	"github.com/kcmvp/idm/ent/rolefunc"
 	"github.com/kcmvp/idm/ent/schema"
 	"github.com/kcmvp/idm/ent/subaccount"
 )
@@ -96,31 +95,6 @@ func init() {
 	roleDescDeleted := roleMixinFields1[2].Descriptor()
 	// role.DefaultDeleted holds the default value on creation for the deleted field.
 	role.DefaultDeleted = roleDescDeleted.Default.(bool)
-	rolefuncMixin := schema.RoleFunc{}.Mixin()
-	rolefuncMixinFields0 := rolefuncMixin[0].Fields()
-	_ = rolefuncMixinFields0
-	rolefuncMixinFields1 := rolefuncMixin[1].Fields()
-	_ = rolefuncMixinFields1
-	rolefuncFields := schema.RoleFunc{}.Fields()
-	_ = rolefuncFields
-	// rolefuncDescCreateTime is the schema descriptor for create_time field.
-	rolefuncDescCreateTime := rolefuncMixinFields0[0].Descriptor()
-	// rolefunc.DefaultCreateTime holds the default value on creation for the create_time field.
-	rolefunc.DefaultCreateTime = rolefuncDescCreateTime.Default.(func() time.Time)
-	// rolefuncDescUpdateTime is the schema descriptor for update_time field.
-	rolefuncDescUpdateTime := rolefuncMixinFields0[1].Descriptor()
-	// rolefunc.DefaultUpdateTime holds the default value on creation for the update_time field.
-	rolefunc.DefaultUpdateTime = rolefuncDescUpdateTime.Default.(func() time.Time)
-	// rolefunc.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
-	rolefunc.UpdateDefaultUpdateTime = rolefuncDescUpdateTime.UpdateDefault.(func() time.Time)
-	// rolefuncDescDeleted is the schema descriptor for deleted field.
-	rolefuncDescDeleted := rolefuncMixinFields1[2].Descriptor()
-	// rolefunc.DefaultDeleted holds the default value on creation for the deleted field.
-	rolefunc.DefaultDeleted = rolefuncDescDeleted.Default.(bool)
-	// rolefuncDescURLPattern is the schema descriptor for url_pattern field.
-	rolefuncDescURLPattern := rolefuncFields[0].Descriptor()
-	// rolefunc.URLPatternValidator is a validator for the "url_pattern" field. It is called by the builders before save.
-	rolefunc.URLPatternValidator = rolefuncDescURLPattern.Validators[0].(func(string) error)
 	subaccountMixin := schema.SubAccount{}.Mixin()
 	subaccountMixinFields0 := subaccountMixin[0].Fields()
 	_ = subaccountMixinFields0

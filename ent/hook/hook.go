@@ -35,6 +35,19 @@ func (f ApplicationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value,
 	return f(ctx, mv)
 }
 
+// The FunFunc type is an adapter to allow the use of ordinary
+// function as Fun mutator.
+type FunFunc func(context.Context, *ent.FunMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f FunFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.FunMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.FunMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The RoleFunc type is an adapter to allow the use of ordinary
 // function as Role mutator.
 type RoleFunc func(context.Context, *ent.RoleMutation) (ent.Value, error)
@@ -44,19 +57,6 @@ func (f RoleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 	mv, ok := m.(*ent.RoleMutation)
 	if !ok {
 		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RoleMutation", m)
-	}
-	return f(ctx, mv)
-}
-
-// The RoleFuncFunc type is an adapter to allow the use of ordinary
-// function as RoleFunc mutator.
-type RoleFuncFunc func(context.Context, *ent.RoleFuncMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f RoleFuncFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.RoleFuncMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RoleFuncMutation", m)
 	}
 	return f(ctx, mv)
 }

@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"errors"
 	"fmt"
 	"math"
@@ -27,7 +26,8 @@ type SubAccountQuery struct {
 	fields     []string
 	predicates []predicate.SubAccount
 	// eager-loading edges.
-	withAccoun *AccountQuery
+	withAccount *AccountQuery
+	withFKs     bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -64,8 +64,8 @@ func (saq *SubAccountQuery) Order(o ...OrderFunc) *SubAccountQuery {
 	return saq
 }
 
-// QueryAccoun chains the current query on the "accoun" edge.
-func (saq *SubAccountQuery) QueryAccoun() *AccountQuery {
+// QueryAccount chains the current query on the "account" edge.
+func (saq *SubAccountQuery) QueryAccount() *AccountQuery {
 	query := &AccountQuery{config: saq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := saq.prepareQuery(ctx); err != nil {
@@ -78,7 +78,7 @@ func (saq *SubAccountQuery) QueryAccoun() *AccountQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(subaccount.Table, subaccount.FieldID, selector),
 			sqlgraph.To(account.Table, account.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, subaccount.AccounTable, subaccount.AccounPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, subaccount.AccountTable, subaccount.AccountColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(saq.driver.Dialect(), step)
 		return fromU, nil
@@ -262,12 +262,12 @@ func (saq *SubAccountQuery) Clone() *SubAccountQuery {
 		return nil
 	}
 	return &SubAccountQuery{
-		config:     saq.config,
-		limit:      saq.limit,
-		offset:     saq.offset,
-		order:      append([]OrderFunc{}, saq.order...),
-		predicates: append([]predicate.SubAccount{}, saq.predicates...),
-		withAccoun: saq.withAccoun.Clone(),
+		config:      saq.config,
+		limit:       saq.limit,
+		offset:      saq.offset,
+		order:       append([]OrderFunc{}, saq.order...),
+		predicates:  append([]predicate.SubAccount{}, saq.predicates...),
+		withAccount: saq.withAccount.Clone(),
 		// clone intermediate query.
 		sql:    saq.sql.Clone(),
 		path:   saq.path,
@@ -275,14 +275,14 @@ func (saq *SubAccountQuery) Clone() *SubAccountQuery {
 	}
 }
 
-// WithAccoun tells the query-builder to eager-load the nodes that are connected to
-// the "accoun" edge. The optional arguments are used to configure the query builder of the edge.
-func (saq *SubAccountQuery) WithAccoun(opts ...func(*AccountQuery)) *SubAccountQuery {
+// WithAccount tells the query-builder to eager-load the nodes that are connected to
+// the "account" edge. The optional arguments are used to configure the query builder of the edge.
+func (saq *SubAccountQuery) WithAccount(opts ...func(*AccountQuery)) *SubAccountQuery {
 	query := &AccountQuery{config: saq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
-	saq.withAccoun = query
+	saq.withAccount = query
 	return saq
 }
 
@@ -350,11 +350,18 @@ func (saq *SubAccountQuery) prepareQuery(ctx context.Context) error {
 func (saq *SubAccountQuery) sqlAll(ctx context.Context) ([]*SubAccount, error) {
 	var (
 		nodes       = []*SubAccount{}
+		withFKs     = saq.withFKs
 		_spec       = saq.querySpec()
 		loadedTypes = [1]bool{
-			saq.withAccoun != nil,
+			saq.withAccount != nil,
 		}
 	)
+	if saq.withAccount != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, subaccount.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		node := &SubAccount{config: saq.config}
 		nodes = append(nodes, node)
@@ -375,67 +382,31 @@ func (saq *SubAccountQuery) sqlAll(ctx context.Context) ([]*SubAccount, error) {
 		return nodes, nil
 	}
 
-	if query := saq.withAccoun; query != nil {
-		fks := make([]driver.Value, 0, len(nodes))
-		ids := make(map[int]*SubAccount, len(nodes))
-		for _, node := range nodes {
-			ids[node.ID] = node
-			fks = append(fks, node.ID)
-			node.Edges.Accoun = []*Account{}
+	if query := saq.withAccount; query != nil {
+		ids := make([]int, 0, len(nodes))
+		nodeids := make(map[int][]*SubAccount)
+		for i := range nodes {
+			if nodes[i].account_sub_accounts == nil {
+				continue
+			}
+			fk := *nodes[i].account_sub_accounts
+			if _, ok := nodeids[fk]; !ok {
+				ids = append(ids, fk)
+			}
+			nodeids[fk] = append(nodeids[fk], nodes[i])
 		}
-		var (
-			edgeids []int
-			edges   = make(map[int][]*SubAccount)
-		)
-		_spec := &sqlgraph.EdgeQuerySpec{
-			Edge: &sqlgraph.EdgeSpec{
-				Inverse: true,
-				Table:   subaccount.AccounTable,
-				Columns: subaccount.AccounPrimaryKey,
-			},
-			Predicate: func(s *sql.Selector) {
-				s.Where(sql.InValues(subaccount.AccounPrimaryKey[1], fks...))
-			},
-			ScanValues: func() [2]interface{} {
-				return [2]interface{}{new(sql.NullInt64), new(sql.NullInt64)}
-			},
-			Assign: func(out, in interface{}) error {
-				eout, ok := out.(*sql.NullInt64)
-				if !ok || eout == nil {
-					return fmt.Errorf("unexpected id value for edge-out")
-				}
-				ein, ok := in.(*sql.NullInt64)
-				if !ok || ein == nil {
-					return fmt.Errorf("unexpected id value for edge-in")
-				}
-				outValue := int(eout.Int64)
-				inValue := int(ein.Int64)
-				node, ok := ids[outValue]
-				if !ok {
-					return fmt.Errorf("unexpected node id in edges: %v", outValue)
-				}
-				if _, ok := edges[inValue]; !ok {
-					edgeids = append(edgeids, inValue)
-				}
-				edges[inValue] = append(edges[inValue], node)
-				return nil
-			},
-		}
-		if err := sqlgraph.QueryEdges(ctx, saq.driver, _spec); err != nil {
-			return nil, fmt.Errorf(`query edges "accoun": %w`, err)
-		}
-		query.Where(account.IDIn(edgeids...))
+		query.Where(account.IDIn(ids...))
 		neighbors, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
 		for _, n := range neighbors {
-			nodes, ok := edges[n.ID]
+			nodes, ok := nodeids[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected "accoun" node returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "account_sub_accounts" returned %v`, n.ID)
 			}
 			for i := range nodes {
-				nodes[i].Edges.Accoun = append(nodes[i].Edges.Accoun, n)
+				nodes[i].Edges.Account = n
 			}
 		}
 	}
