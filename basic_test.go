@@ -1,6 +1,5 @@
 package main
 
-// Basic imports
 import (
 	"github.com/kcmvp/idm/infra"
 	"github.com/kcmvp/profile"
@@ -10,9 +9,6 @@ import (
 	"testing"
 )
 
-// Define the suite, and absorb the built-in basic suite
-// functionality from testify - including a T() method which
-// returns the current testing context
 type BasicTestSuite struct {
 	suite.Suite
 }
